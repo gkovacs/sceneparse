@@ -568,7 +568,7 @@ namespace sceneparse {
 		public override void Initialize() {
 			Name = "SquareN";
 			Data = new int[3,3] {{255,255,255},{255,255,255},{255,255,255}};
-			MaxCost = 10;
+			MaxCost = 100;
 			TCostCons = new int[] {1};
 			Transforms = new VisTrans[] {
 				ExpandOut,
@@ -614,6 +614,49 @@ namespace sceneparse {
 			Data = new int[1,1] {{255}};
 		}
 	}*/
+	
+	public delegate void NodeActionDelegate(IVisNode n);
+	
+	public class SearchDijkstra {
+		public C5.IntervalHeap<IVisNode> Agenda {get; set;}
+		public Dictionary<int[,], IVisNode> Visited {get; set;}
+		public NodeActionDelegate NodeAction {get; set;}
+		public int Lifetime {get; set;}
+		public SearchDijkstra(NodeActionDelegate nadel) {
+			Agenda = new C5.IntervalHeap<IVisNode>(new VisNodeComparer());
+			Visited = new Dictionary<int[,], IVisNode>(new MatrixEqualityComparerInt());
+			NodeAction = nadel;
+			Lifetime = Int32.MaxValue;
+		}
+		public void Add(IVisNode n) {
+			this.Agenda.Add(n);
+			this.Visited.Add(n.Data, n);
+		}
+		public bool Next() {
+			if (Lifetime != Int32.MaxValue) {
+				if (--Lifetime <= 0) return false;
+			}
+			IVisNode cn = null;
+			while (cn == null || cn.Cost > cn.MaxCost) {
+				if (Agenda.IsEmpty) return false;
+				cn = Agenda.DeleteMin();
+			}
+			NodeAction(cn);
+			var nvals = cn.Next();
+			foreach (var x in nvals) {
+				if (Visited.ContainsKey(x.Data)) {
+					continue;
+				} else {
+					Visited.Add(x.Data, x);
+					Agenda.Add(x);
+				}
+			}
+			return true;
+		}
+		public void Run() {
+			while (this.Next()) {};
+		}
+	}
 
 	public class MainClass {
 		
@@ -714,32 +757,16 @@ namespace sceneparse {
 			}
 			if (geno != null) {
 				geno.Initialize();
-				var agenda = new C5.IntervalHeap<IVisNode>(new VisNodeComparer());
-				var visited = new Dictionary<int[,], IVisNode>(new MatrixEqualityComparerInt());
-				//var agenda = new Queue<IVisNode>();
-				//agenda.Enqueue(geno);
-				visited.Add(geno.Data, geno);
-				agenda.Add(geno);
-				for (int i = 0; i < numiter; ++i) {
-					if (agenda.IsEmpty) break;
-					//if (agenda.Count < 1) break;
-					var cn = agenda.DeleteMin();
-					if (cn.Cost > cn.MaxCost) continue;
-					//var cn = agenda.Dequeue();
+				int imgn = 0;
+				var search = new SearchDijkstra(delegate(IVisNode cn) {
 					Console.WriteLine(cn.Describe());
 					Console.WriteLine();
-					cn.Data.ToPNG("out"+i);
-					var nvals = cn.Next();
-					foreach (var x in nvals) {
-						if (visited.ContainsKey(x.Data)) {
-							continue;
-						} else {
-							visited.Add(x.Data, x);
-							agenda.Add(x);
-						}
-					}
-					//agenda.Extend(cn.Next);
-				}
+					cn.Data.ToPNG("out"+imgn);
+					++imgn;
+				});
+				search.Lifetime = numiter;
+				search.Add(geno);
+				search.Run();
 			}
 		}
 	}

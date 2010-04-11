@@ -128,6 +128,52 @@ namespace sceneparse {
 			return o;
 		}
 		
+		public static bool MatrixEquals<T>(this T[,] v, T[,] o) where T : IEquatable<T> {
+			if (v.Width() != o.Width() || v.Height() != o.Height())
+				return false;
+			for (int x = 0; x < v.Width(); ++x) {
+				for (int y = 0; y < v.Height(); ++y) {
+					if (!v[x,y].Equals(o[x,y])) return false;
+				}
+			}
+			return true;
+		}
+		/*
+		public static int MatrixHash<T>(this T[,] v) {
+			// FNV-1a hash
+			throw new Exception("arbitrary value hashing not implemented");
+		}
+		*/
+		public static int MatrixHash(this int[,] v) {
+			// FNV-1a hash
+			unchecked
+			{
+				const int p = 16777619;
+				int hash = (int)2166136261;
+			
+				for (int y = 0; y < v.Height(); ++y) {
+					for (int x = 0; x < v.Width(); ++x) {
+						int t = (int)v[x,y];
+						byte t0 = (byte)t;
+						hash = (hash ^ t0) * p;
+						byte t1 = (byte)(t >> 8);
+						hash = (hash ^ t1) * p;
+						byte t2 = (byte)(t >> 16);
+						hash = (hash ^ t2) * p;
+						byte t3 = (byte)(t >> 24);
+						hash = (hash ^ t3) * p;
+					}
+				}
+			
+				hash += hash << 13;
+				hash ^= hash >> 7;
+				hash += hash << 3;
+				hash ^= hash >> 17;
+				hash += hash << 5;
+				return hash;
+			}
+		}
+		
 		public static T[,] SliceX<T>(this T[,] v, int xs, int xe) {
 			T[,] n = new T[xe-xs, v.Height()];
 			for (int x = 0; x < xe-xs; ++x) {
@@ -367,6 +413,39 @@ namespace sceneparse {
 			}
 		}
 	}
+	/*
+	public class MatrixEqualityComparer<T> : IEqualityComparer<T[,]> where T : IEquatable<T> {
+		public bool Equals(T[,] v, T[,] o) {
+			return v.MatrixEquals(o);
+		}
+		public int GetHashCode(T[,] v) {
+			return v.MatrixHash();
+		}
+	}
+	*/
+	public class MatrixEqualityComparerInt : IEqualityComparer<int[,]> {
+		public bool Equals(int[,] v, int[,] o) {
+			return v.MatrixEquals(o);
+		}
+		public int GetHashCode(int[,] v) {
+			return v.MatrixHash();
+		}
+	}
+	
+	public class VisNodeEqualityComparer : IEqualityComparer<IVisNode> {
+		public bool Equals(IVisNode v, IVisNode o) {
+			return v.Equals(o);
+		}
+		public int GetHashCode(IVisNode v) {
+			return v.GetHashCode();
+		}
+	}
+	
+	public class VisNodeComparer : IComparer<IVisNode> {
+		public int Compare(IVisNode v, IVisNode o) {
+			return v.CompareTo(o);
+		}
+	}
 	
 	public delegate IVisNode VisTrans(IVisNode n);
 	public delegate int VisTransCost();
@@ -376,7 +455,15 @@ namespace sceneparse {
 		T DeepCopyNoData();
 	}
 	
-	public interface IVisNode : IComparable<IVisNode>, IDeepCopyable<IVisNode> {
+	public interface IHashable {
+		int GetHashCode();
+	}
+	
+	public interface IVisNode : 
+		IComparable<IVisNode>,
+		IEquatable<IVisNode>,
+		IHashable,
+		IDeepCopyable<IVisNode> {
 		int Width {get;}
 		int Height {get;}
 		string Name {get; set;}
@@ -417,8 +504,16 @@ namespace sceneparse {
 				return rv;
 			} }
 		
+		public bool Equals(IVisNode o) {
+			return this.Data.MatrixEquals(o.Data);
+		}
+		
 		public int CompareTo(IVisNode o) {
 			return this.Cost.CompareTo(o.Cost);
+		}
+		
+		public override int GetHashCode() {
+			return this.Data.MatrixHash();
 		}
 		
 		public IVisNode DeepCopy() {
@@ -458,12 +553,12 @@ namespace sceneparse {
 		public static IVisNode ContractIn(IVisNode ths) {
 			var n = ths.DeepCopyNoData();
 			n.Data = ths.Data.SliceXY(1,ths.Data.LastX(),1,ths.Data.LastY());
-			n.Data.SetRow(0, 255);
-			n.Data.SetRow(n.Data.LastY(), 255);
-			n.Data.SetColumn(0, 255);
-			n.Data.SetColumn(n.Data.LastX(), 255);
+			//n.Data.SetRow(0, 255);
+			//n.Data.SetRow(n.Data.LastY(), 255);
+			//n.Data.SetColumn(0, 255);
+			//n.Data.SetColumn(n.Data.LastX(), 255);
 			n.Cost += ths.TCostCons[0];
-			if (n.Width < 1) n.Cost = n.MaxCost+1;
+			if (n.Width < 1 || n.Height < 1) n.Cost = n.MaxCost+1;
 			Console.WriteLine("cost is "+n.Cost);
 			Console.WriteLine("data width is "+n.Width);
 			return n;
@@ -617,9 +712,11 @@ namespace sceneparse {
 			}
 			if (geno != null) {
 				geno.Initialize();
-				var agenda = new C5.IntervalHeap<IVisNode>();
+				var agenda = new C5.IntervalHeap<IVisNode>(new VisNodeComparer());
+				var visited = new Dictionary<int[,], IVisNode>(new MatrixEqualityComparerInt());
 				//var agenda = new Queue<IVisNode>();
 				//agenda.Enqueue(geno);
+				visited.Add(geno.Data, geno);
 				agenda.Add(geno);
 				for (int i = 0; i < numiter; ++i) {
 					if (agenda.IsEmpty) break;
@@ -630,7 +727,16 @@ namespace sceneparse {
 					Console.WriteLine(cn.Name);
 					Console.WriteLine(cn.Cost);
 					cn.Data.ToPNG("out"+i);
-					agenda.Extend(cn.Next);
+					var nvals = cn.Next;
+					foreach (var x in nvals) {
+						if (visited.ContainsKey(x.Data)) {
+							continue;
+						} else {
+							visited.Add(x.Data, x);
+							agenda.Add(x);
+						}
+					}
+					//agenda.Extend(cn.Next);
 				}
 			}
 		}

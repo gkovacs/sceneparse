@@ -322,11 +322,33 @@ namespace sceneparse {
 			return string.Copy(n);
 		}
 		
+		public static void SerializeArrays(this IVisNode n) {
+			n.SerWidth = n.Data.Width();
+			n.SerHeight = n.Data.Height();
+			n.SerData = new int[n.SerWidth*n.SerHeight];
+			for (int y = 0; y < n.SerHeight; ++y) {
+				for (int x = 0; x < n.SerWidth; ++x) {
+					n.SerData[x+y*n.SerHeight] = n.Data[x,y];
+				}
+			}
+		}
+		
+		public static void DeSerializeArrays(this IVisNode n) {
+			n.Data = new int[n.SerWidth,n.SerHeight];
+			for (int y = 0; y < n.SerHeight; ++y) {
+				for (int x = 0; x < n.SerWidth; ++x) {
+					n.Data[x,y] = n.SerData[x+y*n.SerHeight];
+				}
+			}
+		}
+		
 		public static void SerializeToFile(this IVisNode n, string fn) {
 			XmlSerializer x = new XmlSerializer(n.GetType());
 			FileStream fs = new FileStream(fn+".xml", FileMode.Create);
+			n.SerializeArrays();
 			x.Serialize(fs, n);
 			fs.Close();
+			n.SerData = null;
 		}
 		
 		public static Bitmap ToBitmap(this int[,] b1) {
@@ -480,6 +502,9 @@ namespace sceneparse {
 		int HeuvCost {get;}
 		int MaxCost {get; set;}
 		int[,] Data {get; set;}
+		int[] SerData {get; set;}
+		int SerWidth {get; set;}
+		int SerHeight {get; set;}
 		VisTrans[] Transforms {get; set;}
 		//VisTransCost[] TCosts {get; set;}
 		int[] TCostCons {get; set;}
@@ -497,8 +522,11 @@ namespace sceneparse {
 		public int Heuv {get; set;}
 		public int HeuvCost {get {return Cost + Heuv;} }
 		public int MaxCost {get; set;}
-		public int[,] Data {get; set;}
+		[XmlIgnore] public int[,] Data {get; set;}
 		[XmlIgnore] public VisTrans[] Transforms {get; set;}
+		public int[] SerData {get; set;}
+		public int SerWidth {get; set;}
+		public int SerHeight {get; set;}
 		//public VisTransCost[] TCosts {get; set;}
 		public int[] TCostCons {get; set;}
 		//public virtual int[,] Render () {return null;}
@@ -788,7 +816,7 @@ namespace sceneparse {
 					Console.WriteLine(cn.Describe());
 					Console.WriteLine();
 					cn.Data.ToPNG("out"+imgn);
-					//cn.SerializeToFile("out"+imgn);
+					cn.SerializeToFile("out"+imgn);
 					++imgn;
 				});
 				search.Lifetime = numiter;

@@ -95,6 +95,66 @@ namespace sceneparse {
 			}
 		}
 		
+		public static void CopyRow<T>(this T[,] v, T[,] o, int yi) {
+			v.CopyRow(o, yi, yi);
+		}
+		
+		public static void CopyRow<T>(this T[,] v, T[,] o, int yi, int yo) {
+			if (v.Width() != o.Width()) throw new Exception("not same width");
+			for (int x = 0; x < v.Width(); ++x) {
+				o[x,yo] = v[x,yi];
+			}
+		}
+		
+		public static void CopyColumn<T>(this T[,] v, T[,] o, int xi) {
+			v.CopyColumn(o, xi, xi);
+		}
+		
+		public static void CopyColumn<T>(this T[,] v, T[,] o, int xi, int xo) {
+			if (v.Height() != o.Height()) throw new Exception("not same height");
+			for (int y = 0; y < v.Height(); ++y) {
+				o[xo,y] = v[xi,y];
+			}
+		}
+		
+		public static string MkString(this int[,] v) {
+			string o = "\n";
+			for (int y = 0; y < v.Height(); ++y) {
+				for (int x = 0; x < v.Width(); ++x) {
+					o += v[x,y].ToString()+", ";
+				}
+				o += "\n";
+			}
+			return o;
+		}
+		
+		public static T[,] SliceX<T>(this T[,] v, int xs, int xe) {
+			T[,] n = new T[xe-xs, v.Height()];
+			for (int x = 0; x < xe-xs; ++x) {
+				v.CopyColumn(n, x+xs, x);
+			}
+			return n;
+		}
+		
+		public static T[,] SliceY<T>(this T[,] v, int ys, int ye) {
+			T[,] n = new T[v.Width(), ye-ys];
+			for (int y = 0; y < ye-ys; ++y) {
+				v.CopyRow(n, y+ys, y);
+			}
+			return n;
+		}
+		
+		public static T[,] SliceXY<T>(this T[,] v, int xs, int xe, int ys, int ye) {
+			if (ys >= ye || xs >= xe) return new T[0,0];
+			T[,] n = new T[xe-xs, ye-ys];
+			for (int y = 0; y < ye-ys; ++y) {
+				for (int x = 0; x < xe-xs; ++x) {
+					n[x,y] = v[x+xs,y+ys];
+				}
+			}
+			return n;
+		}
+		
 		public static T[,] AddLeftColumn<T>(this T[,] v) {
 			return v.AddLeftColumn(1);
 		}
@@ -211,26 +271,6 @@ namespace sceneparse {
 			return b2;
 		}
 		
-		public static T DeepCopy<T>(this T o) where T : IVisNode, new() {
-			T n = o.DeepCopyNoData();
-			n.Data = o.Data.DeepCopy();
-			return n;
-		}
-		
-		public static T DeepCopyNoData<T>(this T o) where T : IVisNode, new() {
-			T n = new T();
-			//n.Initialize();
-			n.Name = o.Name.DeepCopy();
-			n.Data = null;
-			n.Cost = o.Cost;
-			n.Heuv = o.Heuv; // not necessary, heuv computed externally
-			n.MaxCost = o.MaxCost;
-			n.Transforms = o.Transforms.DeepCopy();
-			//n.TCosts = o.TCosts.DeepCopy();
-			n.TCostCons = o.TCostCons.DeepCopy();
-			return n;
-		}
-		
 		public static string DeepCopy(this string n) {
 			return string.Copy(n);
 		}
@@ -330,8 +370,13 @@ namespace sceneparse {
 	
 	public delegate IVisNode VisTrans(IVisNode n);
 	public delegate int VisTransCost();
+
+	public interface IDeepCopyable<T> {
+		T DeepCopy();
+		T DeepCopyNoData();
+	}
 	
-	public interface IVisNode : IComparable<IVisNode> {
+	public interface IVisNode : IComparable<IVisNode>, IDeepCopyable<IVisNode> {
 		int Width {get;}
 		int Height {get;}
 		string Name {get; set;}
@@ -362,7 +407,7 @@ namespace sceneparse {
 		public int[] TCostCons {get; set;}
 		//public virtual int[,] Render () {return null;}
 		public virtual void Initialize() {}
-		//public virtual IVisNode MakeNew() {return null;}
+		
 		public IVisNode[] Next {get {
 				var rv = new IVisNode[Transforms.Length];
 				for (int x = 0; x < Transforms.Length; ++x) {
@@ -371,14 +416,34 @@ namespace sceneparse {
 				}
 				return rv;
 			} }
+		
 		public int CompareTo(IVisNode o) {
 			return this.Cost.CompareTo(o.Cost);
+		}
+		
+		public IVisNode DeepCopy() {
+			IVisNode n = this.DeepCopyNoData();
+			n.Data = this.Data.DeepCopy();
+			return n;
+		}
+		
+		public IVisNode DeepCopyNoData() {
+			IVisNode n = (IVisNode)this.MemberwiseClone();//MakeNew<T>();
+			//n.Initialize();
+			n.Name = this.Name.DeepCopy();
+			n.Data = null;
+			n.Cost = this.Cost;
+			n.Heuv = this.Heuv; // not necessary, heuv computed externally
+			n.MaxCost = this.MaxCost;
+			n.Transforms = this.Transforms.DeepCopy();
+			//n.TCosts = o.TCosts.DeepCopy();
+			n.TCostCons = this.TCostCons.DeepCopy();
+			return n;
 		}
 	}
 	
 	public class SquareN : BaseVisNode {
-		public static IVisNode ExpandOut(IVisNode thsg) {
-			var ths = (SquareN)thsg;
+		public static IVisNode ExpandOut(IVisNode ths) {
 			var n = ths.DeepCopyNoData();
 			n.Data = ths.Data.AddAllSidesRowsColumns();
 			n.Data.SetRow(0, 255);
@@ -390,11 +455,27 @@ namespace sceneparse {
 			Console.WriteLine("data width is "+n.Width);
 			return n;
 		}
+		public static IVisNode ContractIn(IVisNode ths) {
+			var n = ths.DeepCopyNoData();
+			n.Data = ths.Data.SliceXY(1,ths.Data.LastX(),1,ths.Data.LastY());
+			n.Data.SetRow(0, 255);
+			n.Data.SetRow(n.Data.LastY(), 255);
+			n.Data.SetColumn(0, 255);
+			n.Data.SetColumn(n.Data.LastX(), 255);
+			n.Cost += ths.TCostCons[0];
+			if (n.Width < 1) n.Cost = n.MaxCost+1;
+			Console.WriteLine("cost is "+n.Cost);
+			Console.WriteLine("data width is "+n.Width);
+			return n;
+		}
 		public override void Initialize() {
 			Name = "SquareN";
+			Data = new int[3,3] {{255,255,255},{255,255,255},{255,255,255}};
+			MaxCost = 10;
 			TCostCons = new int[] {1};
 			Transforms = new VisTrans[] {
 				ExpandOut,
+				ContractIn,
 				/*
 				(ths) => {
 					var n = ths.DeepCopyNoData();
@@ -411,9 +492,31 @@ namespace sceneparse {
 			//TCosts = new VisTransCost[] {
 			//	() => {return TCostCons[0];}
 			//};
-			Data = new int[1,1] {{255}};
 		}
 	}
+	/*
+	public class TowerN : BaseVisNode {
+		public static IVisNode GrowUp(IVisNode ths) {
+			var n = ths.DeepCopyNoData();
+			n.Data = ths.Data.AddAllSidesRowsColumns();
+			n.Data.SetRow(0, 255);
+			n.Data.SetRow(n.Data.LastY(), 255);
+			n.Data.SetColumn(0, 255);
+			n.Data.SetColumn(n.Data.LastX(), 255);
+			n.Cost += ths.TCostCons[0];
+			Console.WriteLine("cost is "+n.Cost);
+			Console.WriteLine("data width is "+n.Width);
+			return n;
+		}
+		public override void Initialize() {
+			Name = "TowerN";
+			TCostCons = new int[] {1};
+			Transforms = new VisTrans[] {
+				GrowUp,
+			};
+			Data = new int[1,1] {{255}};
+		}
+	}*/
 
 	public class MainClass {
 		
@@ -471,6 +574,12 @@ namespace sceneparse {
 				{"t|itr=", "number of {ITERATIONS} to go", v => {
 						numiter = Int32.Parse(v);
 					}},
+				{"s|ser=", "object {TYPE} to serialize", v => {
+						if (v.Contains("."))
+							geno = (IVisNode)Activator.CreateInstance(Type.GetType(v));
+						else
+							geno = (IVisNode)Activator.CreateInstance(Type.GetType("sceneparse."+v));
+					}},
 				{"g|gen=", "object {TYPE} to generate", v => {
 						if (v.Contains("."))
 							geno = (IVisNode)Activator.CreateInstance(Type.GetType(v));
@@ -516,6 +625,7 @@ namespace sceneparse {
 					if (agenda.IsEmpty) break;
 					//if (agenda.Count < 1) break;
 					var cn = agenda.DeleteMin();
+					if (cn.Cost > cn.MaxCost) continue;
 					//var cn = agenda.Dequeue();
 					Console.WriteLine(cn.Name);
 					Console.WriteLine(cn.Cost);

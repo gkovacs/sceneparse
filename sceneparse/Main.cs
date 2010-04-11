@@ -477,7 +477,8 @@ namespace sceneparse {
 		int[] TCostCons {get; set;}
 		//int[,] Render();
 		void Initialize();
-		IVisNode[] Next {get;}
+		string Describe();
+		IVisNode[] Next();
 	}
 	
 	public class BaseVisNode : IVisNode {
@@ -495,14 +496,13 @@ namespace sceneparse {
 		//public virtual int[,] Render () {return null;}
 		public virtual void Initialize() {}
 		
-		public IVisNode[] Next {get {
-				var rv = new IVisNode[Transforms.Length];
-				for (int x = 0; x < Transforms.Length; ++x) {
-					rv[x] = this.Transforms[x](this);
-					Console.WriteLine("rvx is"+rv[x].Cost);
-				}
-				return rv;
-			} }
+		public IVisNode[] Next() {
+			var rv = new IVisNode[Transforms.Length];
+			for (int x = 0; x < Transforms.Length; ++x) {
+				rv[x] = this.Transforms[x](this);
+			}
+			return rv;
+		}
 		
 		public bool Equals(IVisNode o) {
 			return this.Data.MatrixEquals(o.Data);
@@ -535,33 +535,35 @@ namespace sceneparse {
 			n.TCostCons = this.TCostCons.DeepCopy();
 			return n;
 		}
+		
+		public virtual string Describe() {
+			return this.Name;
+		}
 	}
 	
 	public class SquareN : BaseVisNode {
 		public static IVisNode ExpandOut(IVisNode ths) {
 			var n = ths.DeepCopyNoData();
-			n.Data = ths.Data.AddAllSidesRowsColumns();
-			n.Data.SetRow(0, 255);
+			//n.Data = ths.Data.AddAllSidesRowsColumns();
+			n.Data = ths.Data.AddRightColumn().AddBottomRow();
+			//n.Data.SetRow(0, 255);
 			n.Data.SetRow(n.Data.LastY(), 255);
-			n.Data.SetColumn(0, 255);
+			//n.Data.SetColumn(0, 255);
 			n.Data.SetColumn(n.Data.LastX(), 255);
 			n.Cost += ths.TCostCons[0];
-			Console.WriteLine("cost is "+n.Cost);
-			Console.WriteLine("data width is "+n.Width);
 			return n;
 		}
 		public static IVisNode ContractIn(IVisNode ths) {
 			var n = ths.DeepCopyNoData();
-			n.Data = ths.Data.SliceXY(1,ths.Data.LastX(),1,ths.Data.LastY());
-			//n.Data.SetRow(0, 255);
-			//n.Data.SetRow(n.Data.LastY(), 255);
-			//n.Data.SetColumn(0, 255);
-			//n.Data.SetColumn(n.Data.LastX(), 255);
+			n.Data = ths.Data.SliceXY(0,ths.Data.LastX(),0,ths.Data.LastY());
 			n.Cost += ths.TCostCons[0];
 			if (n.Width < 1 || n.Height < 1) n.Cost = n.MaxCost+1;
-			Console.WriteLine("cost is "+n.Cost);
-			Console.WriteLine("data width is "+n.Width);
 			return n;
+		}
+		public override string Describe() {
+			return	"Name: "+this.Name+"\n"+
+					"Cost: "+this.Cost+"\n"+
+					"Width: "+this.Width;
 		}
 		public override void Initialize() {
 			Name = "SquareN";
@@ -724,10 +726,10 @@ namespace sceneparse {
 					var cn = agenda.DeleteMin();
 					if (cn.Cost > cn.MaxCost) continue;
 					//var cn = agenda.Dequeue();
-					Console.WriteLine(cn.Name);
-					Console.WriteLine(cn.Cost);
+					Console.WriteLine(cn.Describe());
+					Console.WriteLine();
 					cn.Data.ToPNG("out"+i);
-					var nvals = cn.Next;
+					var nvals = cn.Next();
 					foreach (var x in nvals) {
 						if (visited.ContainsKey(x.Data)) {
 							continue;

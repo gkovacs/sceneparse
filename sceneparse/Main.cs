@@ -324,7 +324,7 @@ namespace sceneparse {
 		public static Bitmap ToBitmap(this int[,] b1) {
 			var o = new Bitmap(b1.Width(), b1.Height());
 			for (int x = 0; x < b1.Width(); ++x) {
-				for (int y = 0; y < b1.Width(); ++y) {
+				for (int y = 0; y < b1.Height(); ++y) {
 					if (b1[x,y] > 0)
 						o.SetPixel(x,y,Color.Red);
 					else
@@ -537,60 +537,78 @@ namespace sceneparse {
 		}
 		
 		public virtual string Describe() {
-			return this.Name;
+			return	"Name: "+this.Name+"\n"+
+					"Cost: "+this.Cost+"\n"+
+					"Width: "+this.Width+"\n"+
+					"Height: "+this.Height;
 		}
 	}
 	
 	public class SquareN : BaseVisNode {
-		public static IVisNode ExpandOut(IVisNode ths) {
-			var n = ths.DeepCopyNoData();
-			//n.Data = ths.Data.AddAllSidesRowsColumns();
-			n.Data = ths.Data.AddRightColumn().AddBottomRow();
-			//n.Data.SetRow(0, 255);
-			n.Data.SetRow(n.Data.LastY(), 255);
-			//n.Data.SetColumn(0, 255);
-			n.Data.SetColumn(n.Data.LastX(), 255);
-			n.Cost += ths.TCostCons[0];
-			return n;
-		}
-		public static IVisNode ContractIn(IVisNode ths) {
-			var n = ths.DeepCopyNoData();
-			n.Data = ths.Data.SliceXY(0,ths.Data.LastX(),0,ths.Data.LastY());
-			n.Cost += ths.TCostCons[0];
-			if (n.Width < 1 || n.Height < 1) n.Cost = n.MaxCost+1;
-			return n;
-		}
-		public override string Describe() {
-			return	"Name: "+this.Name+"\n"+
-					"Cost: "+this.Cost+"\n"+
-					"Width: "+this.Width;
-		}
 		public override void Initialize() {
 			Name = "SquareN";
 			Data = new int[3,3] {{255,255,255},{255,255,255},{255,255,255}};
 			MaxCost = 100;
 			TCostCons = new int[] {1};
 			Transforms = new VisTrans[] {
-				ExpandOut,
-				ContractIn,
-				/*
-				(ths) => {
+				(IVisNode ths) => { // Expand
 					var n = ths.DeepCopyNoData();
-					Console.WriteLine(ths.GetHashCode());
-					Console.WriteLine(n.GetHashCode());
-					n.transnum = ths.transnum+"a";
-					Console.WriteLine("transform called "+n.transnum);
-					n.Data = ths.Data.AddAllSidesRowsColumns();
-					n.Cost += 1;//this.TCostCons[0];
-					Console.WriteLine("cost is "+n.Cost);
+					n.Data = ths.Data.AddRightColumn().AddBottomRow();
+					n.Data.SetRow(n.Data.LastY(), 255);
+					n.Data.SetColumn(n.Data.LastX(), 255);
+					n.Cost += ths.TCostCons[0];
 					return n;
-				},*/
+				},
+				(IVisNode ths) => { // Contract
+					var n = ths.DeepCopyNoData();
+					n.Data = ths.Data.SliceXY(0,ths.Data.LastX(),0,ths.Data.LastY());
+					n.Cost += ths.TCostCons[0];
+					if (n.Width < 1 || n.Height < 1) n.Cost = n.MaxCost+1;
+					return n;
+				},
 			};
-			//TCosts = new VisTransCost[] {
-			//	() => {return TCostCons[0];}
-			//};
 		}
 	}
+	
+	public class RectangleN : BaseVisNode {
+		public override void Initialize() {
+			Name = "RectangleN";
+			Data = new int[3,3] {{255,255,255},{255,255,255},{255,255,255}};
+			MaxCost = 100;
+			TCostCons = new int[] {1};
+			Transforms = new VisTrans[] {
+				(IVisNode ths) => { // ExpandX
+					var n = ths.DeepCopyNoData();
+					n.Data = ths.Data.AddRightColumn();
+					n.Data.SetColumn(n.Data.LastX(), 255);
+					n.Cost += ths.TCostCons[0];
+					return n;
+				},
+				(IVisNode ths) => { // ExpandY
+					var n = ths.DeepCopyNoData();
+					n.Data = ths.Data.AddBottomRow();
+					n.Data.SetRow(n.Data.LastY(), 255);
+					n.Cost += ths.TCostCons[0];
+					return n;
+				},
+				(IVisNode ths) => { // ContractX
+					var n = ths.DeepCopyNoData();
+					n.Data = ths.Data.SliceX(0,ths.Data.LastX());
+					n.Cost += ths.TCostCons[0];
+					if (n.Width < 1 || n.Height < 1) n.Cost = n.MaxCost+1;
+					return n;
+				},
+				(IVisNode ths) => { // ContractY
+					var n = ths.DeepCopyNoData();
+					n.Data = ths.Data.SliceY(0,ths.Data.LastY());
+					n.Cost += ths.TCostCons[0];
+					if (n.Width < 1 || n.Height < 1) n.Cost = n.MaxCost+1;
+					return n;
+				},
+			};
+		}
+	}
+	
 	/*
 	public class TowerN : BaseVisNode {
 		public static IVisNode GrowUp(IVisNode ths) {
@@ -758,7 +776,7 @@ namespace sceneparse {
 			if (geno != null) {
 				geno.Initialize();
 				int imgn = 0;
-				var search = new SearchDijkstra(delegate(IVisNode cn) {
+				var search = new SearchDijkstra((IVisNode cn) => {
 					Console.WriteLine(cn.Describe());
 					Console.WriteLine();
 					cn.Data.ToPNG("out"+imgn);

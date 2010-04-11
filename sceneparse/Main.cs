@@ -23,6 +23,7 @@ using System;
 using System.IO;
 using System.Drawing;
 using System.Collections.Generic;
+using System.Xml.Serialization;
 
 namespace sceneparse {
 	
@@ -321,6 +322,13 @@ namespace sceneparse {
 			return string.Copy(n);
 		}
 		
+		public static void SerializeToFile(this IVisNode n, string fn) {
+			XmlSerializer x = new XmlSerializer(n.GetType());
+			FileStream fs = new FileStream(fn+".xml", FileMode.Create);
+			x.Serialize(fs, n);
+			fs.Close();
+		}
+		
 		public static Bitmap ToBitmap(this int[,] b1) {
 			var o = new Bitmap(b1.Width(), b1.Height());
 			for (int x = 0; x < b1.Width(); ++x) {
@@ -476,7 +484,7 @@ namespace sceneparse {
 		//VisTransCost[] TCosts {get; set;}
 		int[] TCostCons {get; set;}
 		//int[,] Render();
-		void Initialize();
+		//void Initialize();
 		string Describe();
 		IVisNode[] Next();
 	}
@@ -490,11 +498,11 @@ namespace sceneparse {
 		public int HeuvCost {get {return Cost + Heuv;} }
 		public int MaxCost {get; set;}
 		public int[,] Data {get; set;}
-		public VisTrans[] Transforms {get; set;}
+		[XmlIgnore] public VisTrans[] Transforms {get; set;}
 		//public VisTransCost[] TCosts {get; set;}
 		public int[] TCostCons {get; set;}
 		//public virtual int[,] Render () {return null;}
-		public virtual void Initialize() {}
+		//public virtual void Initialize() {}
 		
 		public IVisNode[] Next() {
 			var rv = new IVisNode[Transforms.Length];
@@ -545,7 +553,7 @@ namespace sceneparse {
 	}
 	
 	public class SquareN : BaseVisNode {
-		public override void Initialize() {
+		public SquareN() {
 			Name = "SquareN";
 			Data = new int[3,3] {{255,255,255},{255,255,255},{255,255,255}};
 			MaxCost = 100;
@@ -571,7 +579,7 @@ namespace sceneparse {
 	}
 	
 	public class RectangleN : BaseVisNode {
-		public override void Initialize() {
+		public RectangleN() {
 			Name = "RectangleN";
 			Data = new int[3,3] {{255,255,255},{255,255,255},{255,255,255}};
 			MaxCost = 100;
@@ -774,12 +782,13 @@ namespace sceneparse {
 				return;
 			}
 			if (geno != null) {
-				geno.Initialize();
+				//geno.Initialize();
 				int imgn = 0;
 				var search = new SearchDijkstra((IVisNode cn) => {
 					Console.WriteLine(cn.Describe());
 					Console.WriteLine();
 					cn.Data.ToPNG("out"+imgn);
+					//cn.SerializeToFile("out"+imgn);
 					++imgn;
 				});
 				search.Lifetime = numiter;

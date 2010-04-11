@@ -77,6 +77,24 @@ namespace sceneparse {
 			}
 		}
 		
+		public static void Extend<T>(this C5.IExtensible<T> v, IEnumerable<T> n) {
+			foreach (T x in n) {
+				v.Add(x);
+			}
+		}
+		
+		public static void SetRow<T>(this T[,] v, int num, T val) {
+			for (int x = 0; x < v.Width(); ++x) {
+				v[x,num] = val;
+			}
+		}
+		
+		public static void SetColumn<T>(this T[,] v, int num, T val) {
+			for (int y = 0; y < v.Height(); ++y) {
+				v[num,y] = val;
+			}
+		}
+		
 		public static T[,] AddLeftColumn<T>(this T[,] v) {
 			return v.AddLeftColumn(1);
 		}
@@ -221,7 +239,10 @@ namespace sceneparse {
 			var o = new Bitmap(b1.Width(), b1.Height());
 			for (int x = 0; x < b1.Width(); ++x) {
 				for (int y = 0; y < b1.Width(); ++y) {
-					o.SetPixel(x,y,Color.Red);
+					if (b1[x,y] > 0)
+						o.SetPixel(x,y,Color.Red);
+					else
+						o.SetPixel(x,y,Color.Black);
 				}
 			}
 			return o;
@@ -310,7 +331,7 @@ namespace sceneparse {
 	public delegate IVisNode VisTrans(IVisNode n);
 	public delegate int VisTransCost();
 	
-	public interface IVisNode {
+	public interface IVisNode : IComparable<IVisNode> {
 		int Width {get;}
 		int Height {get;}
 		string Name {get; set;}
@@ -350,6 +371,9 @@ namespace sceneparse {
 				}
 				return rv;
 			} }
+		public int CompareTo(IVisNode o) {
+			return this.Cost.CompareTo(o.Cost);
+		}
 	}
 	
 	public class SquareN : BaseVisNode {
@@ -357,6 +381,10 @@ namespace sceneparse {
 			var ths = (SquareN)thsg;
 			var n = ths.DeepCopyNoData();
 			n.Data = ths.Data.AddAllSidesRowsColumns();
+			n.Data.SetRow(0, 255);
+			n.Data.SetRow(n.Data.LastY(), 255);
+			n.Data.SetColumn(0, 255);
+			n.Data.SetColumn(n.Data.LastX(), 255);
 			n.Cost += ths.TCostCons[0];
 			Console.WriteLine("cost is "+n.Cost);
 			Console.WriteLine("data width is "+n.Width);
@@ -383,7 +411,7 @@ namespace sceneparse {
 			//TCosts = new VisTransCost[] {
 			//	() => {return TCostCons[0];}
 			//};
-			Data = new int[0,0];
+			Data = new int[1,1] {{255}};
 		}
 	}
 
@@ -480,13 +508,18 @@ namespace sceneparse {
 			}
 			if (geno != null) {
 				geno.Initialize();
-				var agenda = new Queue<IVisNode>();
-				agenda.Enqueue(geno);
+				var agenda = new C5.IntervalHeap<IVisNode>();
+				//var agenda = new Queue<IVisNode>();
+				//agenda.Enqueue(geno);
+				agenda.Add(geno);
 				for (int i = 0; i < numiter; ++i) {
-					if (agenda.Count < 1) break;
-					var cn = agenda.Dequeue();
+					if (agenda.IsEmpty) break;
+					//if (agenda.Count < 1) break;
+					var cn = agenda.DeleteMin();
+					//var cn = agenda.Dequeue();
 					Console.WriteLine(cn.Name);
 					Console.WriteLine(cn.Cost);
+					cn.Data.ToPNG("out"+i);
 					agenda.Extend(cn.Next);
 				}
 			}

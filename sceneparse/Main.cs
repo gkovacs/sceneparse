@@ -43,7 +43,77 @@ namespace sceneparse
 			return n;
 		}
 		
-		public static int CompImages(int[,] o1, int[,] o2) {
+		public static int SlidingImgComp(int[,] refi, int[,] s, ref int xout, ref int yout) {
+			if (s.Width() > refi.Width())
+				throw new Exception("Supplied image too wide");
+			if (s.Height() > refi.Height())
+				throw new Exception("Supplied image too high");
+			int mindiff = int.MaxValue;
+			int[,] o = new int[refi.Width(),refi.Height()];
+			int xbest = 0;
+			int ybest = 0;
+			for (int y = 10; y <= o.Height()-s.Height(); y += 20) {
+				for (int x = 10; x <= o.Width()-s.Width(); x += 20) {
+					o.SetAll(0);
+					s.PadXY(o, x, o.Width()-s.Width()-x, y, o.Height()-s.Height()-y);
+					//o.ToPNG("nout"+(y*o.Width()+x));
+					int diffv = CompImages(refi, o, 15);
+					//Console.WriteLine(diffv);
+					if (diffv < mindiff) {
+						mindiff = diffv;
+						xbest = x;
+						ybest = y;
+					}
+				}
+			}
+			for (int y = Math.Max(0, ybest-18); y <= Math.Min(o.Height()-s.Height(), ybest+18); y += 5) {
+				for (int x = Math.Max(0, xbest-18); x <= Math.Min(o.Width()-s.Width(), xbest+18); x += 5) {
+					o.SetAll(0);
+					s.PadXY(o, x, o.Width()-s.Width()-x, y, o.Height()-s.Height()-y);
+					//o.ToPNG("nout"+(y*o.Width()+x));
+					int diffv = CompImages(refi, o, 5);
+					//Console.WriteLine(diffv);
+					if (diffv < mindiff) {
+						mindiff = diffv;
+						xbest = x;
+						ybest = y;
+					}
+				}
+			}
+			for (int y = Math.Max(0, ybest-4); y <= Math.Min(o.Height()-s.Height(), ybest+4); y += 2) {
+				for (int x = Math.Max(0, xbest-4); x <= Math.Min(o.Width()-s.Width(), xbest+4); x += 2) {
+					o.SetAll(0);
+					s.PadXY(o, x, o.Width()-s.Width()-x, y, o.Height()-s.Height()-y);
+					//o.ToPNG("nout"+(y*o.Width()+x));
+					int diffv = CompImages(refi, o, 2);
+					//Console.WriteLine(diffv);
+					if (diffv < mindiff) {
+						mindiff = diffv;
+						xbest = x;
+						ybest = y;
+					}
+				}
+			}
+			for (int y = Math.Max(0, ybest-1); y <= Math.Min(o.Height()-s.Height(), ybest+1); y += 1) {
+				for (int x = Math.Max(0, xbest-1); x <= Math.Min(o.Width()-s.Width(), xbest+1); x += 1) {
+					o.SetAll(0);
+					s.PadXY(o, x, o.Width()-s.Width()-x, y, o.Height()-s.Height()-y);
+					//o.ToPNG("nout"+(y*o.Width()+x));
+					int diffv = CompImages(refi, o, 1);
+					//Console.WriteLine(diffv);
+					if (diffv < mindiff) {
+						mindiff = diffv;
+						xbest = x;
+						ybest = y;
+					}
+				}
+			}
+			xout = xbest;
+			yout = ybest;
+			return mindiff;
+		}
+		
+		public static int CompImages(int[,] o1, int[,] o2, int propdepth) {
 			if (o1.Width() != o2.Width())
 				throw new Exception("wrong width");
 			if (o1.Height() != o2.Height())
@@ -54,7 +124,7 @@ namespace sceneparse
 			int[,] b2 = new int[o2.Width(),o2.Height()];
 			int total = 0;
 			int weight = 30;
-			for (int i = 0; i < 10; ++i) {
+			for (int i = 0; i < propdepth; ++i) {
 				a1.PixelProp(b1);
 				a2.PixelProp(b2);
 				total += b1.Diff(b2)*weight;
@@ -124,7 +194,10 @@ namespace sceneparse
 							} else if (img1 == null) {
 								Console.WriteLine("need img");
 							} else {
-								Console.WriteLine(CompImages(refimg, img1));
+								int xout = 0;
+								int yout = 0;
+								int heuv = SlidingImgComp(refimg, img1, ref xout, ref yout);
+								Console.WriteLine(heuv+" at "+xout+","+yout);
 							}
 						}
 					}},

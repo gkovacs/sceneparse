@@ -1,4 +1,6 @@
 LoadAssembly("sceneparse.exe");
 using sceneparse;
 
-MainClass.DeSerializeFromFile("out0.xml");
+int[,] x = new int[10,10];
+x.SetAll(255);
+Console.WriteLine(x.PadXY(1,2,10,5).MkString());

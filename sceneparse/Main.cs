@@ -44,6 +44,10 @@ namespace sceneparse
 		}
 		
 		public static int CompImages(int[,] o1, int[,] o2) {
+			if (o1.Width() != o2.Width())
+				throw new Exception("wrong width");
+			if (o1.Height() != o2.Height())
+				throw new Exception("wrong height");
 			int[,] a1 = o1.DeepCopy();
 			int[,] a2 = o2.DeepCopy();
 			int[,] b1 = new int[o1.Width(),o1.Height()];
@@ -152,7 +156,7 @@ namespace sceneparse
 					++imgn;
 				});
 				search.Lifetime = numiter;
-				search.Add(genos);
+				search.Extend(genos);
 				search.Run();
 			}
 			if (geno != null) {

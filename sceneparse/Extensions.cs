@@ -47,6 +47,8 @@ namespace sceneparse
 		}
 		
 		public static int Diff(this int[,] b1, int[,] b2) {
+			if (b1.Width() != b2.Width() || b1.Height() != b2.Height())
+				throw new Exception("dimensions don't match");
 			int total = 0;
 			for (int x = 0; x < b1.Width(); ++x) {
 				for (int y = 0; y < b1.Height(); ++y) {
@@ -66,6 +68,14 @@ namespace sceneparse
 		public static void Extend<T>(this C5.IExtensible<T> v, IEnumerable<T> n) {
 			foreach (T x in n) {
 				v.Add(x);
+			}
+		}
+		
+		public static void SetAll<T>(this T[,] v, T val) {
+			for (int y = 0; y < v.Height(); ++y) {
+				for (int x = 0; x < v.Width(); ++x) {
+					v[x,y] = val;
+				}
 			}
 		}
 		
@@ -280,6 +290,45 @@ namespace sceneparse
 			for (int x = 0; x < v.Width(); ++x) {
 				for (int y = 0; y < v.Height(); ++y) {
 					n[x+num,y+num] = v[x,y];
+				}
+			}
+			return n;
+		}
+		
+		public static T[,] PadX<T>(this T[,] v, T[,] dest, int lx, int rx) {
+			return v.PadXY(dest,lx,rx,0,0);
+		}
+		
+		public static T[,] PadX<T>(this T[,] v, int lx, int rx) {
+			return v.PadXY(lx,rx,0,0);
+		}
+		
+		public static T[,] PadY<T>(this T[,] v, T[,] dest, int uy, int bty) {
+			return v.PadXY(dest,0,0,uy,bty);
+		}
+		
+		public static T[,] PadY<T>(this T[,] v, int uy, int bty) {
+			return v.PadXY(0,0,uy,bty);
+		}
+		
+		public static T[,] PadXY<T>(this T[,] v, T[,] n, int lx, int rx, int uy, int bty) {
+			if (n.Width() != v.Width()+lx+rx)
+				throw new Exception("wrong width");
+			if (n.Height() != v.Height()+uy+bty)
+				throw new Exception("wrong height");
+			for (int y = 0; y < v.Height(); ++y) {
+				for (int x = 0; x < v.Width(); ++x) {
+					n[x+lx,y+uy] = v[x,y];
+				}
+			}
+			return n;
+		}
+		
+		public static T[,] PadXY<T>(this T[,] v, int lx, int rx, int uy, int bty) {
+			T[,] n = new T[v.Width()+lx+rx,v.Height()+uy+bty];
+			for (int y = 0; y < v.Height(); ++y) {
+				for (int x = 0; x < v.Width(); ++x) {
+					n[x+lx,y+uy] = v[x,y];
 				}
 			}
 			return n;

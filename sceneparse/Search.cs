@@ -38,7 +38,7 @@ namespace sceneparse
 		HeuristicDelegate NodeHeuristic {get; set;}
 		int Lifetime {get; set;}
 		void Add(IVisNode n);
-		void Add(IEnumerable<IVisNode> nl);
+		void Extend(IEnumerable<IVisNode> nl);
 		bool Next();
 		void Run();
 	}
@@ -53,7 +53,7 @@ namespace sceneparse
 			this.Agenda.Add(n);
 			this.Visited.Add(n.Data, n);
 		}
-		public void Add(IEnumerable<IVisNode> nl) {
+		public void Extend(IEnumerable<IVisNode> nl) {
 			foreach (var n in nl) {
 				Add(n);
 			}

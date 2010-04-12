@@ -1,0 +1,16 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TowerN xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema">
+  <Name>TowerN</Name>
+  <Cost>0</Cost>
+  <Heuv>0</Heuv>
+  <MaxCost>100</MaxCost>
+  <SerData>
+    <int>255</int>
+  </SerData>
+  <SerWidth>1</SerWidth>
+  <SerHeight>1</SerHeight>
+  <TCostCons>
+    <int>1</int>
+  </TCostCons>
+  <GrowDirection>0</GrowDirection>
+</TowerN>

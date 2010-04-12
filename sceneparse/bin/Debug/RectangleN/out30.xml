@@ -1,0 +1,38 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<RectangleN xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema">
+  <Name>RectangleN</Name>
+  <Cost>0</Cost>
+  <Heuv>0</Heuv>
+  <MaxCost>100</MaxCost>
+  <SerData>
+    <int>255</int>
+    <int>255</int>
+    <int>255</int>
+    <int>255</int>
+    <int>255</int>
+    <int>255</int>
+    <int>255</int>
+    <int>255</int>
+    <int>255</int>
+    <int>255</int>
+    <int>255</int>
+    <int>255</int>
+    <int>255</int>
+    <int>255</int>
+    <int>255</int>
+    <int>255</int>
+    <int>255</int>
+    <int>255</int>
+    <int>255</int>
+    <int>255</int>
+    <int>255</int>
+  </SerData>
+  <SerWidth>7</SerWidth>
+  <SerHeight>3</SerHeight>
+  <TCostCons>
+    <int>1</int>
+    <int>1</int>
+    <int>1</int>
+    <int>1</int>
+  </TCostCons>
+</RectangleN>

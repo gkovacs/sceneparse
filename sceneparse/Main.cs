@@ -712,14 +712,19 @@ namespace sceneparse {
 			Agenda = new C5.IntervalHeap<IVisNode>(new VisNodeComparer());
 			Visited = new Dictionary<int[,], IVisNode>(new MatrixEqualityComparerInt());
 			NodeAction = nadel;
-			Lifetime = Int32.MaxValue;
+			Lifetime = int.MaxValue;
 		}
 		public void Add(IVisNode n) {
 			this.Agenda.Add(n);
 			this.Visited.Add(n.Data, n);
 		}
+		public void Add(IEnumerable<IVisNode> nl) {
+			foreach (var n in nl) {
+				Add(n);
+			}
+		}
 		public bool Next() {
-			if (Lifetime != Int32.MaxValue) {
+			if (Lifetime != int.MaxValue) {
 				if (--Lifetime <= 0) return false;
 			}
 			IVisNode cn = null;
@@ -804,7 +809,7 @@ namespace sceneparse {
 			bool show_help = false;
 			IVisNode geno = null;
 			IVisNode[] genos = null;
-			int numiter = 0;
+			int numiter = int.MaxValue;
 			var opset = new NDesk.Options.OptionSet() {
 				{"r|ref=", "the {REF} image file", (string v) => {
 						refimg = LoadImage(v);
@@ -813,7 +818,7 @@ namespace sceneparse {
 						img1 = LoadImage(v);
 					}},
 				{"t|itr=", "number of {ITERATIONS} to go", (string v) => {
-						numiter = Int32.Parse(v);
+						numiter = int.Parse(v);
 					}},
 				{"l|load=", "object {TYPE} to load", (string v) => {
 						var nv = v.DeepCopy();
@@ -858,6 +863,19 @@ namespace sceneparse {
 			if (show_help) {
 				ShowHelp(opset);
 				return;
+			}
+			if (genos != null) {
+				int imgn = 0;
+				var search = new SearchDijkstra((IVisNode cn) => {
+					Console.WriteLine(cn.Describe());
+					Console.WriteLine();
+					cn.Data.ToPNG("out"+imgn);
+					cn.SerializeToFile("out"+imgn);
+					++imgn;
+				});
+				search.Lifetime = numiter;
+				search.Add(genos);
+				search.Run();
 			}
 			if (geno != null) {
 				//geno.Initialize();

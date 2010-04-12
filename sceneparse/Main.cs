@@ -337,20 +337,22 @@ namespace sceneparse {
 			n.Data = new int[n.SerWidth,n.SerHeight];
 			for (int y = 0; y < n.SerHeight; ++y) {
 				for (int x = 0; x < n.SerWidth; ++x) {
-					n.Data[x,y] = n.SerData[x+y*n.SerHeight];
+					n.Data[x,y] = n.SerData[x+y*n.SerWidth];
 				}
 			}
 		}
 		
 		public static void SerializeToFile(this IVisNode n, string fn) {
+			var nfn = fn.DeepCopy();
+			if (!nfn.Contains(".xml")) nfn += ".xml";
 			XmlSerializer x = new XmlSerializer(n.GetType());
-			FileStream fs = new FileStream(fn+".xml", FileMode.Create);
+			FileStream fs = new FileStream(nfn, FileMode.Create);
 			n.SerializeArrays();
 			x.Serialize(fs, n);
 			fs.Close();
 			n.SerData = null;
 		}
-		
+				
 		public static Bitmap ToBitmap(this int[,] b1) {
 			var o = new Bitmap(b1.Width(), b1.Height());
 			for (int x = 0; x < b1.Width(); ++x) {
@@ -744,6 +746,20 @@ namespace sceneparse {
 
 	public class MainClass {
 		
+		public static IVisNode DeSerializeFromFile(string fn, string typen) {
+			return DeSerializeFromFile(fn, Type.GetType(typen));
+		}
+		
+		public static IVisNode DeSerializeFromFile(string fn, System.Type typen) {
+			XmlSerializer x = new XmlSerializer(typen);
+			FileStream fs = new FileStream(fn, FileMode.Open);
+			var n = (IVisNode)x.Deserialize(fs);
+			fs.Close();
+			n.DeSerializeArrays();
+			n.SerData = null;
+			return n;
+		}
+		
 		public static int CompImages(int[,] o1, int[,] o2) {
 			int[,] a1 = o1.DeepCopy();
 			int[,] a2 = o2.DeepCopy();
@@ -787,30 +803,34 @@ namespace sceneparse {
 			int[,] img1 = null;
 			bool show_help = false;
 			IVisNode geno = null;
+			IVisNode[] genos = null;
 			int numiter = 0;
 			var opset = new NDesk.Options.OptionSet() {
-				{"r|ref=", "the {REF} image file", v => {
+				{"r|ref=", "the {REF} image file", (string v) => {
 						refimg = LoadImage(v);
 					}},
-				{"i|img=", "the {IMAGE} file to load", v => {
+				{"i|img=", "the {IMAGE} file to load", (string v) => {
 						img1 = LoadImage(v);
 					}},
-				{"t|itr=", "number of {ITERATIONS} to go", v => {
+				{"t|itr=", "number of {ITERATIONS} to go", (string v) => {
 						numiter = Int32.Parse(v);
 					}},
-				{"s|ser=", "object {TYPE} to serialize", v => {
-						if (v.Contains("."))
-							geno = (IVisNode)Activator.CreateInstance(Type.GetType(v));
-						else
-							geno = (IVisNode)Activator.CreateInstance(Type.GetType("sceneparse."+v));
+				{"l|load=", "object {TYPE} to load", (string v) => {
+						var nv = v.DeepCopy();
+						if (!nv.Contains(".")) nv = "sceneparse."+nv;
+						var diri = new DirectoryInfo(v);
+						var fil = diri.GetFiles("*.xml");
+						genos = new IVisNode[fil.Length];
+						for (int i = 0; i < fil.Length; ++i) {
+							genos[i] = DeSerializeFromFile(fil[i].FullName, nv);
+						}
 					}},
-				{"g|gen=", "object {TYPE} to generate", v => {
-						if (v.Contains("."))
-							geno = (IVisNode)Activator.CreateInstance(Type.GetType(v));
-						else
-							geno = (IVisNode)Activator.CreateInstance(Type.GetType("sceneparse."+v));
+				{"g|gen=", "object {TYPE} to generate", (string v) => {
+						var nv = v.DeepCopy();
+						if (!nv.Contains(".")) nv = "sceneparse."+nv;
+						geno = (IVisNode)Activator.CreateInstance(Type.GetType(nv));
 					}},
-				{"c|compare", "compare images", v => {
+				{"c|compare", "compare images", (string v) => {
 						if (v != null) {
 							if (refimg == null) {
 								Console.WriteLine("need ref img");
@@ -821,7 +841,7 @@ namespace sceneparse {
 							}
 						}
 					}},
-				{"h|help", "show this message and exit", v => {
+				{"h|help", "show this message and exit", (string v) => {
 						show_help = (v != null);
 					}},
 			};

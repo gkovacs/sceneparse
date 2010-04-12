@@ -403,6 +403,97 @@ namespace sceneparse
 			b1.ToBitmap().Save(fn+".png");
 		}
 		
+		public static void PixelProp8(this int[,] b1, int[,] b2) {
+			// topleft corner
+			if (b1[0,0] > 0 ||
+				b1[1,0] > 0 ||
+				b1[0,1] > 0 ||
+				b1[1,1] > 0) {
+				b2[0,0] = 255;
+			}
+			// topright corner
+			if (b1[b1.LastX(),0] > 0 ||
+				b1[b1.LastX()-1,0] > 0 ||
+				b1[b1.LastX(),1] > 0 ||
+				b1[b1.LastX()-1,1] > 0) {
+				b2[b1.LastX(),0] = 255;
+			}
+			// bottomleft corner
+			if (b1[0,b1.LastY()] > 0 ||
+				b1[1,b1.LastY()] > 0 ||
+				b1[0,b1.LastY()-1] > 0 ||
+			    b1[1,b1.LastY()-1] > 0) {
+				b2[0,b1.LastY()] = 255;
+			}
+			// bottomright corner
+			if (b1[b1.LastX(),b1.LastY()] > 0 ||
+				b1[b1.LastX()-1,b1.LastY()] > 0 ||
+				b1[b1.LastX(),b1.LastY()-1] > 0 ||
+			    b1[b1.LastX()-1,b1.LastY()-1] > 0) {
+				b2[b1.LastX(),b1.LastY()] = 255;
+			}
+			// left row
+			for (int y = 1; y < b1.LastY(); ++y) {
+				if (b1[0,y] > 0 ||
+					b1[1,y] > 0 ||
+					b1[0,y-1] > 0 ||
+					b1[0,y+1] > 0 ||
+				    b1[1,y+1] > 0 ||
+				    b1[1,y-1] > 0) {
+					b2[0,y] = 255;
+				}
+			}
+			// right row
+			for (int y = 1; y < b1.LastY(); ++y) {
+				if (b1[b1.LastX(),y] > 0 ||
+					b1[b1.LastX()-1,y] > 0 ||
+					b1[b1.LastX(),y-1] > 0 ||
+					b1[b1.LastX(),y+1] > 0 ||
+				    b1[b1.LastX()-1,y-1] > 0 ||
+				    b1[b1.LastX()-1,y+1] > 0) {
+					b2[b1.LastX(),y] = 255;
+				}
+			}
+			// top row
+			for (int x = 1; x < b1.LastX(); ++x) {
+				if (b1[x,0] > 0 ||
+					b1[x,1] > 0 ||
+					b1[x-1,0] > 0 ||
+					b1[x+1,0] > 0 ||
+				    b1[x-1,1] > 0 ||
+				    b1[x+1,1] > 0) {
+					b2[x,0] = 255;
+				}
+			}
+			// bottom row
+			for (int x = 1; x < b1.LastX(); ++x) {
+				if (b1[x,b1.LastY()] > 0 ||
+					b1[x,b1.LastY()-1] > 0 ||
+					b1[x-1,b1.LastY()] > 0 ||
+					b1[x+1,b1.LastY()] > 0 ||
+				    b1[x-1,b1.LastY()-1] > 0 ||
+				    b1[x+1,b1.LastY()-1] > 0) {
+					b2[x,b1.LastY()] = 255;
+				}
+			}
+			// center
+			for (int x = 2; x < b1.LastX()-1; ++x) {
+				for (int y = 2; y < b1.LastY()-1; ++y) {
+					if (b1[x,y] > 0 ||
+						b1[x,y-1] > 0 ||
+						b1[x,y+1] > 0 ||
+						b1[x-1,y] > 0 ||
+						b1[x+1,y] > 0 ||
+					    b1[x-1,y-1] > 0 ||
+					    b1[x-1,y+1] > 0 ||
+					    b1[x+1,y-1] > 0 ||
+					    b1[x+1,y+1] > 0) {
+						b2[x,y] = 255;
+					}
+				}
+			}
+		}
+		
 		public static void PixelProp(this int[,] b1, int[,] b2) {
 			// topleft corner
 			if (b1[0,0] > 0 ||

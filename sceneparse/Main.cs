@@ -57,7 +57,7 @@ namespace sceneparse
 					o.SetAll(0);
 					s.PadXY(o, x, o.Width()-s.Width()-x, y, o.Height()-s.Height()-y);
 					//o.ToPNG("nout"+(y*o.Width()+x));
-					int diffv = CompImages(refi, o, 15);
+					int diffv = CompImages(refi, o, 10);
 					//Console.WriteLine(diffv);
 					if (diffv < mindiff) {
 						mindiff = diffv;
@@ -66,12 +66,26 @@ namespace sceneparse
 					}
 				}
 			}
-			for (int y = Math.Max(0, ybest-18); y <= Math.Min(o.Height()-s.Height(), ybest+18); y += 5) {
-				for (int x = Math.Max(0, xbest-18); x <= Math.Min(o.Width()-s.Width(), xbest+18); x += 5) {
+			for (int y = Math.Max(0, ybest-18); y <= Math.Min(o.Height()-s.Height(), ybest+18); y += 10) {
+				for (int x = Math.Max(0, xbest-18); x <= Math.Min(o.Width()-s.Width(), xbest+18); x += 10) {
 					o.SetAll(0);
 					s.PadXY(o, x, o.Width()-s.Width()-x, y, o.Height()-s.Height()-y);
 					//o.ToPNG("nout"+(y*o.Width()+x));
 					int diffv = CompImages(refi, o, 5);
+					//Console.WriteLine(diffv);
+					if (diffv < mindiff) {
+						mindiff = diffv;
+						xbest = x;
+						ybest = y;
+					}
+				}
+			}
+			for (int y = Math.Max(0, ybest-8); y <= Math.Min(o.Height()-s.Height(), ybest+8); y += 5) {
+				for (int x = Math.Max(0, xbest-8); x <= Math.Min(o.Width()-s.Width(), xbest+8); x += 5) {
+					o.SetAll(0);
+					s.PadXY(o, x, o.Width()-s.Width()-x, y, o.Height()-s.Height()-y);
+					//o.ToPNG("nout"+(y*o.Width()+x));
+					int diffv = CompImages(refi, o, 3);
 					//Console.WriteLine(diffv);
 					if (diffv < mindiff) {
 						mindiff = diffv;
@@ -85,7 +99,7 @@ namespace sceneparse
 					o.SetAll(0);
 					s.PadXY(o, x, o.Width()-s.Width()-x, y, o.Height()-s.Height()-y);
 					//o.ToPNG("nout"+(y*o.Width()+x));
-					int diffv = CompImages(refi, o, 2);
+					int diffv = CompImages(refi, o, 1);
 					//Console.WriteLine(diffv);
 					if (diffv < mindiff) {
 						mindiff = diffv;
@@ -125,12 +139,12 @@ namespace sceneparse
 			int total = 0;
 			int weight = 30;
 			for (int i = 0; i < propdepth; ++i) {
-				a1.PixelProp(b1);
-				a2.PixelProp(b2);
+				a1.PixelProp8(b1);
+				a2.PixelProp8(b2);
 				total += b1.Diff(b2)*weight;
 				--weight;
-				b1.PixelProp(a1);
-				b2.PixelProp(a2);
+				b1.PixelProp8(a1);
+				b2.PixelProp8(a2);
 				total += a1.Diff(a2)*weight;
 				--weight;
 			}

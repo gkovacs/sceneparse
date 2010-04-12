@@ -5,3 +5,5 @@
 *.mdb
 *.pidb
 *~
+out*.xml
+out*.png

@@ -516,7 +516,7 @@ namespace sceneparse {
 		IVisNode[] Next();
 	}
 	
-	public class BaseVisNode : IVisNode {
+	public abstract class BaseVisNode : IVisNode {
 		public int Width {get {return this.Data.Width();} }
 		public int Height {get {return this.Data.Height();} }
 		public string Name {get; set;}
@@ -703,17 +703,22 @@ namespace sceneparse {
 
 	public delegate void NodeActionDelegate(IVisNode n);
 	
-	public class SearchDijkstra {
+	public interface ISearchAlgorithm {
+		C5.IntervalHeap<IVisNode> Agenda {get; set;}
+		Dictionary<int[,], IVisNode> Visited {get; set;}
+		NodeActionDelegate NodeAction {get; set;}
+		int Lifetime {get; set;}
+		void Add(IVisNode n);
+		void Add(IEnumerable<IVisNode> nl);
+		bool Next();
+		void Run();
+	}
+	
+	public abstract class BaseSearchAlgorithm : ISearchAlgorithm {
 		public C5.IntervalHeap<IVisNode> Agenda {get; set;}
 		public Dictionary<int[,], IVisNode> Visited {get; set;}
 		public NodeActionDelegate NodeAction {get; set;}
 		public int Lifetime {get; set;}
-		public SearchDijkstra(NodeActionDelegate nadel) {
-			Agenda = new C5.IntervalHeap<IVisNode>(new VisNodeComparer());
-			Visited = new Dictionary<int[,], IVisNode>(new MatrixEqualityComparerInt());
-			NodeAction = nadel;
-			Lifetime = int.MaxValue;
-		}
 		public void Add(IVisNode n) {
 			this.Agenda.Add(n);
 			this.Visited.Add(n.Data, n);
@@ -723,7 +728,20 @@ namespace sceneparse {
 				Add(n);
 			}
 		}
-		public bool Next() {
+		public virtual bool Next() {return false;}
+		public void Run() {
+			while (this.Next()) {};
+		}
+	}
+	
+	public class SearchDijkstra : BaseSearchAlgorithm {
+		public SearchDijkstra(NodeActionDelegate nadel) {
+			Agenda = new C5.IntervalHeap<IVisNode>(new VisNodeComparer());
+			Visited = new Dictionary<int[,], IVisNode>(new MatrixEqualityComparerInt());
+			NodeAction = nadel;
+			Lifetime = int.MaxValue;
+		}
+		public override bool Next() {
 			if (Lifetime != int.MaxValue) {
 				if (--Lifetime <= 0) return false;
 			}
@@ -743,9 +761,6 @@ namespace sceneparse {
 				}
 			}
 			return true;
-		}
-		public void Run() {
-			while (this.Next()) {};
 		}
 	}
 

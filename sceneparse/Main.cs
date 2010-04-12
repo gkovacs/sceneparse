@@ -27,22 +27,6 @@ using System.Xml.Serialization;
 
 namespace sceneparse {
 	
-	public class Constants {
-		public static readonly string myname = System.Reflection.Assembly.GetExecutingAssembly().GetName().Name;
-		public static readonly int[,] m0 = {{1}};
-		public const int v0 = 1;
-		public static readonly int[,] m1 = {{1,1,1},{1,1,1},{1,1,1}};
-		public const int v1 = 9;
-		public static readonly int[,] m2 = {{1,1,1,1,1},{1,1,1,1,1},{1,1,1,1,1},{1,1,1,1,1},{1,1,1,1,1}};
-		public const int v2 = 25;
-		public static readonly int[,] m3 = {{1,1,1,1,1,1,1},{1,1,1,1,1,1,1},{1,1,1,1,1,1,1},{1,1,1,1,1,1,1},{1,1,1,1,1,1,1},{1,1,1,1,1,1,1},{1,1,1,1,1,1,1}};
-		public const int v3 = 49;
-		public static readonly int[,] m4 = {{1,1,1,1,1,1,1,1,1},{1,1,1,1,1,1,1,1,1},{1,1,1,1,1,1,1,1,1},{1,1,1,1,1,1,1,1,1},{1,1,1,1,1,1,1,1,1},{1,1,1,1,1,1,1,1,1},{1,1,1,1,1,1,1,1,1},{1,1,1,1,1,1,1,1,1},{1,1,1,1,1,1,1,1,1}};
-		public const int v4 = 81;
-		public static readonly int[][,] ml = {m0,m1,m2,m3,m4};
-		public static readonly int[] vl = {v0,v1,v2,v3,v4};
-	}
-	
 	public static class Extensions {
 		
 		public static int Width<T>(this T[,] a) {

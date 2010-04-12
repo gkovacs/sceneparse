@@ -18,6 +18,6 @@ Global
 		StartupItem = sceneparse\sceneparse.csproj
 		Policies = $0
 		$0.StandardHeader = $1
-		$1.inheritsSet = MITX11License
+		$1.inheritsSet = GPLv3License
 	EndGlobalSection
 EndGlobal

@@ -35,6 +35,7 @@ namespace sceneparse
 		C5.IntervalHeap<IVisNode> Agenda {get; set;}
 		Dictionary<int[,], IVisNode> Visited {get; set;}
 		NodeActionDelegate NodeAction {get; set;}
+		HeuristicDelegate NodeHeuristic {get; set;}
 		int Lifetime {get; set;}
 		void Add(IVisNode n);
 		void Add(IEnumerable<IVisNode> nl);
@@ -47,6 +48,7 @@ namespace sceneparse
 		public Dictionary<int[,], IVisNode> Visited {get; set;}
 		public NodeActionDelegate NodeAction {get; set;}
 		public int Lifetime {get; set;}
+		public HeuristicDelegate NodeHeuristic {get; set;}
 		public void Add(IVisNode n) {
 			this.Agenda.Add(n);
 			this.Visited.Add(n.Data, n);
@@ -63,7 +65,6 @@ namespace sceneparse
 	}
 	
 	public class SearchAstar : BaseSearchAlgorithm {
-		public HeuristicDelegate NodeHeuristic {get; set;}
 		public SearchAstar(NodeActionDelegate nadel, HeuristicDelegate heudel) {
 			Agenda = new C5.IntervalHeap<IVisNode>(new VisNodeComparer());
 			Visited = new Dictionary<int[,], IVisNode>(new MatrixEqualityComparerInt());

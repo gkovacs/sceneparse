@@ -130,7 +130,7 @@ namespace sceneparse
 		}
 		
 		public int CompareTo(IVisNode o) {
-			return this.Cost.CompareTo(o.Cost);
+			return this.HeuvCost.CompareTo(o.HeuvCost);
 		}
 		
 		public override int GetHashCode() {

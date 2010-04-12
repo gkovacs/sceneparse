@@ -144,7 +144,7 @@ namespace sceneparse
 			}
 			if (genos != null) {
 				int imgn = 0;
-				var search = new SearchDijkstra((IVisNode cn) => {
+				var search = new SearchAstar((IVisNode cn) => {
 					Console.WriteLine(cn.Describe());
 					Console.WriteLine();
 					cn.Data.ToPNG("out"+imgn);
@@ -158,7 +158,7 @@ namespace sceneparse
 			if (geno != null) {
 				//geno.Initialize();
 				int imgn = 0;
-				var search = new SearchDijkstra((IVisNode cn) => {
+				var search = new SearchAstar((IVisNode cn) => {
 					Console.WriteLine(cn.Describe());
 					Console.WriteLine();
 					cn.Data.ToPNG("out"+imgn);

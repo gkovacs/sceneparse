@@ -29,6 +29,7 @@ using System.Xml.Serialization;
 namespace sceneparse
 {
 	public delegate void NodeActionDelegate(IVisNode n);
+	public delegate int HeuristicDelegate(IVisNode n);
 	
 	public interface ISearchAlgorithm {
 		C5.IntervalHeap<IVisNode> Agenda {get; set;}
@@ -61,11 +62,20 @@ namespace sceneparse
 		}
 	}
 	
-	public class SearchDijkstra : BaseSearchAlgorithm {
-		public SearchDijkstra(NodeActionDelegate nadel) {
+	public class SearchAstar : BaseSearchAlgorithm {
+		public HeuristicDelegate NodeHeuristic {get; set;}
+		public SearchAstar(NodeActionDelegate nadel, HeuristicDelegate heudel) {
 			Agenda = new C5.IntervalHeap<IVisNode>(new VisNodeComparer());
 			Visited = new Dictionary<int[,], IVisNode>(new MatrixEqualityComparerInt());
 			NodeAction = nadel;
+			NodeHeuristic = heudel;
+			Lifetime = int.MaxValue;
+		}
+		public SearchAstar(NodeActionDelegate nadel) {
+			Agenda = new C5.IntervalHeap<IVisNode>(new VisNodeComparer());
+			Visited = new Dictionary<int[,], IVisNode>(new MatrixEqualityComparerInt());
+			NodeAction = nadel;
+			NodeHeuristic = (IVisNode v) => {return 0;};
 			Lifetime = int.MaxValue;
 		}
 		public override bool Next() {
@@ -80,6 +90,7 @@ namespace sceneparse
 			NodeAction(cn);
 			var nvals = cn.Next();
 			foreach (var x in nvals) {
+				x.Heuv = NodeHeuristic(x);
 				if (Visited.ContainsKey(x.Data)) {
 					continue;
 				} else {

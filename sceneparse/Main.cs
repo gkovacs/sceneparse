@@ -147,10 +147,10 @@ namespace sceneparse {
 		*/
 		public static int MatrixHash(this int[,] v) {
 			// FNV-1a hash
-			unchecked
-			{
+			//unchecked
+			//{
 				const int p = 16777619;
-				int hash = (int)2166136261;
+				uint hash = 2166136261;
 			
 				for (int y = 0; y < v.Height(); ++y) {
 					for (int x = 0; x < v.Width(); ++x) {
@@ -171,8 +171,8 @@ namespace sceneparse {
 				hash += hash << 3;
 				hash ^= hash >> 17;
 				hash += hash << 5;
-				return hash;
-			}
+				return (int)hash;
+			//}
 		}
 		
 		public static T[,] SliceX<T>(this T[,] v, int xs, int xe) {
@@ -328,7 +328,7 @@ namespace sceneparse {
 			n.SerData = new int[n.SerWidth*n.SerHeight];
 			for (int y = 0; y < n.SerHeight; ++y) {
 				for (int x = 0; x < n.SerWidth; ++x) {
-					n.SerData[x+y*n.SerHeight] = n.Data[x,y];
+					n.SerData[x+y*n.SerWidth] = n.Data[x,y];
 				}
 			}
 		}
@@ -581,94 +581,124 @@ namespace sceneparse {
 	}
 	
 	public class SquareN : BaseVisNode {
+		public static IVisNode Expand(IVisNode ths) {
+			var n = ths.DeepCopyNoData();
+			n.Data = ths.Data.AddRightColumn().AddBottomRow();
+			n.Data.SetRow(n.Data.LastY(), 255);
+			n.Data.SetColumn(n.Data.LastX(), 255);
+			n.Cost += ths.TCostCons[0];
+			return n;
+		}
+		public static IVisNode Contract(IVisNode ths) {
+			var n = ths.DeepCopyNoData();
+			n.Data = ths.Data.SliceXY(0,ths.Data.LastX(),0,ths.Data.LastY());
+			n.Cost += ths.TCostCons[0];
+			if (n.Width < 1 || n.Height < 1) n.Cost = n.MaxCost+1;
+			return n;
+		}
 		public SquareN() {
 			Name = "SquareN";
 			Data = new int[3,3] {{255,255,255},{255,255,255},{255,255,255}};
 			MaxCost = 100;
-			TCostCons = new int[] {1};
+			TCostCons = new int[] {1,1};
 			Transforms = new VisTrans[] {
-				(IVisNode ths) => { // Expand
-					var n = ths.DeepCopyNoData();
-					n.Data = ths.Data.AddRightColumn().AddBottomRow();
-					n.Data.SetRow(n.Data.LastY(), 255);
-					n.Data.SetColumn(n.Data.LastX(), 255);
-					n.Cost += ths.TCostCons[0];
-					return n;
-				},
-				(IVisNode ths) => { // Contract
-					var n = ths.DeepCopyNoData();
-					n.Data = ths.Data.SliceXY(0,ths.Data.LastX(),0,ths.Data.LastY());
-					n.Cost += ths.TCostCons[0];
-					if (n.Width < 1 || n.Height < 1) n.Cost = n.MaxCost+1;
-					return n;
-				},
+				Expand,
+				Contract,
 			};
 		}
 	}
 	
 	public class RectangleN : BaseVisNode {
+		public static IVisNode ExpandX(IVisNode ths) {
+			var n = ths.DeepCopyNoData();
+			n.Data = ths.Data.AddRightColumn();
+			n.Data.SetColumn(n.Data.LastX(), 255);
+			n.Cost += ths.TCostCons[0];
+			return n;
+		}
+		public static IVisNode ExpandY(IVisNode ths) {
+			var n = ths.DeepCopyNoData();
+			n.Data = ths.Data.AddBottomRow();
+			n.Data.SetRow(n.Data.LastY(), 255);
+			n.Cost += ths.TCostCons[0];
+			return n;
+		}
+		public static IVisNode ContractX(IVisNode ths) {
+			var n = ths.DeepCopyNoData();
+			n.Data = ths.Data.SliceX(0,ths.Data.LastX());
+			n.Cost += ths.TCostCons[0];
+			if (n.Width < 1 || n.Height < 1) n.Cost = n.MaxCost+1;
+			return n;
+		}
+		public static IVisNode ContractY(IVisNode ths) {
+			var n = ths.DeepCopyNoData();
+			n.Data = ths.Data.SliceY(0,ths.Data.LastY());
+			n.Cost += ths.TCostCons[0];
+			if (n.Width < 1 || n.Height < 1) n.Cost = n.MaxCost+1;
+			return n;
+		}
+
 		public RectangleN() {
 			Name = "RectangleN";
 			Data = new int[3,3] {{255,255,255},{255,255,255},{255,255,255}};
 			MaxCost = 100;
-			TCostCons = new int[] {1};
+			TCostCons = new int[] {1,1,1,1};
 			Transforms = new VisTrans[] {
-				(IVisNode ths) => { // ExpandX
-					var n = ths.DeepCopyNoData();
-					n.Data = ths.Data.AddRightColumn();
-					n.Data.SetColumn(n.Data.LastX(), 255);
-					n.Cost += ths.TCostCons[0];
-					return n;
-				},
-				(IVisNode ths) => { // ExpandY
-					var n = ths.DeepCopyNoData();
-					n.Data = ths.Data.AddBottomRow();
-					n.Data.SetRow(n.Data.LastY(), 255);
-					n.Cost += ths.TCostCons[0];
-					return n;
-				},
-				(IVisNode ths) => { // ContractX
-					var n = ths.DeepCopyNoData();
-					n.Data = ths.Data.SliceX(0,ths.Data.LastX());
-					n.Cost += ths.TCostCons[0];
-					if (n.Width < 1 || n.Height < 1) n.Cost = n.MaxCost+1;
-					return n;
-				},
-				(IVisNode ths) => { // ContractY
-					var n = ths.DeepCopyNoData();
-					n.Data = ths.Data.SliceY(0,ths.Data.LastY());
-					n.Cost += ths.TCostCons[0];
-					if (n.Width < 1 || n.Height < 1) n.Cost = n.MaxCost+1;
-					return n;
-				},
+				ExpandX,
+				ExpandY,
+				ContractX,
+				ContractY,
 			};
 		}
 	}
 	
-	/*
 	public class TowerN : BaseVisNode {
-		public static IVisNode GrowUp(IVisNode ths) {
-			var n = ths.DeepCopyNoData();
-			n.Data = ths.Data.AddAllSidesRowsColumns();
-			n.Data.SetRow(0, 255);
-			n.Data.SetRow(n.Data.LastY(), 255);
-			n.Data.SetColumn(0, 255);
-			n.Data.SetColumn(n.Data.LastX(), 255);
-			n.Cost += ths.TCostCons[0];
-			Console.WriteLine("cost is "+n.Cost);
-			Console.WriteLine("data width is "+n.Width);
+		public int GrowDirection = 0;
+		// 0 = undecided
+		// 1 = up/down
+		// 2 = left/right
+		public static IVisNode ExpandX(IVisNode thso) {
+			var ths = (TowerN)thso;
+			var n = (TowerN)RectangleN.ExpandX(ths);
+			if (ths.GrowDirection == 2) n.Cost = n.MaxCost+1;
+			else if (ths.GrowDirection == 0) n.GrowDirection = 1;
 			return n;
 		}
-		public override void Initialize() {
+		public static IVisNode ExpandY(IVisNode thso) {
+			var ths = (TowerN)thso;
+			var n = (TowerN)RectangleN.ExpandY(ths);
+			if (ths.GrowDirection == 1) n.Cost = n.MaxCost+1;
+			else if (ths.GrowDirection == 0) n.GrowDirection = 2;
+			return n;
+		}
+		public static IVisNode ContractX(IVisNode thso) {
+			var ths = (TowerN)thso;
+			var n = (TowerN)RectangleN.ContractX(ths);
+			if (ths.GrowDirection == 2) n.Cost = n.MaxCost+1;
+			else if (ths.GrowDirection == 0) n.GrowDirection = 1;
+			return n;
+		}
+		public static IVisNode ContractY(IVisNode thso) {
+			var ths = (TowerN)thso;
+			var n = (TowerN)RectangleN.ContractY(ths);
+			if (ths.GrowDirection == 1) n.Cost = n.MaxCost+1;
+			else if (ths.GrowDirection == 0) n.GrowDirection = 2;
+			return n;
+		}
+		public TowerN() {
 			Name = "TowerN";
+			Data = new int[1,1] {{255}};
+			MaxCost = 100;
 			TCostCons = new int[] {1};
 			Transforms = new VisTrans[] {
-				GrowUp,
+				ExpandX,
+				ExpandY,
+				ContractX,
+				ContractY,
 			};
-			Data = new int[1,1] {{255}};
 		}
-	}*/
-	
+	}
+
 	public delegate void NodeActionDelegate(IVisNode n);
 	
 	public class SearchDijkstra {

@@ -127,6 +127,38 @@ namespace sceneparse
 			return mindiff;
 		}
 		
+		public static int SlidingImgComp2(int[,] refi, int[,] s, ref int xout, ref int yout) {
+			if (s.Width() > refi.Width())
+				throw new Exception("Supplied image too wide");
+			if (s.Height() > refi.Height())
+				throw new Exception("Supplied image too high");
+			var rpixprop = new int[10][,];
+			var spixprop = new int[10][,];
+			rpixprop[0] = refi;
+			spixprop[0] = s;
+			int rwidth = refi.Width();
+			int rheight = refi.Height();
+			int swidth = s.Width();
+			int sheight = s.Height();
+			for (int i = 0; i < 9; ++i) {
+				rpixprop[i+1] = new int[rwidth,rheight];
+				spixprop[i+1] = new int[swidth,sheight];
+				rpixprop[i].PixelProp8(rpixprop[i+1]);
+				spixprop[i].PixelProp8(spixprop[i+1]);
+			}
+			int[,] total = new int[rwidth-swidth+1,rheight-sheight+1];
+			int weight = 30;
+			for (int i = 9; i >= 0; --i) {
+				for (int y = 0; y <= rheight-sheight; ++y) {
+					for (int x = 0; x <= rwidth-swidth; ++x) {
+						total[x,y] += weight*rpixprop[i].Diff(spixprop[i], x, y);
+					}
+				}
+				--weight;
+			}
+			return total.Min(ref xout, ref yout);
+		}
+		
 		public static int CompImages(int[,] o1, int[,] o2, int propdepth) {
 			if (o1.Width() != o2.Width())
 				throw new Exception("wrong width");
@@ -210,7 +242,7 @@ namespace sceneparse
 							} else {
 								int xout = 0;
 								int yout = 0;
-								int heuv = SlidingImgComp(refimg, img1, ref xout, ref yout);
+								int heuv = SlidingImgComp2(refimg, img1, ref xout, ref yout);
 								Console.WriteLine(heuv+" at "+xout+","+yout);
 							}
 						}

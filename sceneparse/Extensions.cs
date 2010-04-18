@@ -45,6 +45,42 @@ namespace sceneparse
 			return a.GetLength(1)-1;
 		}
 		
+		public static int Min(this int[,] a, ref int xout, ref int yout) {
+			int xmax = 0;
+			int ymax = 0;
+			int maxval = a[xmax,ymax];
+			for (int x = 0; x < a.Width(); ++x) {
+				for (int y = 0; y < a.Height(); ++y) {
+					if (a[x,y] < maxval) {
+						xmax = x;
+						ymax = y;
+						maxval = a[x,y];
+					}
+				}
+			}
+			xout = xmax;
+			yout = ymax;
+			return maxval;
+		}
+		
+		public static int Max(this int[,] a, ref int xout, ref int yout) {
+			int xmax = 0;
+			int ymax = 0;
+			int maxval = a[xmax,ymax];
+			for (int x = 0; x < a.Width(); ++x) {
+				for (int y = 0; y < a.Height(); ++y) {
+					if (a[x,y] > maxval) {
+						xmax = x;
+						ymax = y;
+						maxval = a[x,y];
+					}
+				}
+			}
+			xout = xmax;
+			yout = ymax;
+			return maxval;
+		}
+		
 		public static int Diff(this int[,] b1, int[,] b2) {
 			if (b1.Width() != b2.Width() || b1.Height() != b2.Height())
 				throw new Exception("dimensions don't match");
@@ -53,6 +89,20 @@ namespace sceneparse
 				for (int y = 0; y < b1.Height(); ++y) {
 					if (b1[x,y] != b2[x,y]) ++total;
 					//total += Math.Abs(b1[x,y]-b2[x,y]);
+				}
+			}
+			return total;
+		}
+		
+		public static int Diff(this int[,] refimg, int[,] simg, int startx, int starty) {
+			if (startx+simg.Width() > refimg.Width())
+				throw new Exception("Supplied image's x offset too large");
+			if (starty+simg.Height() > refimg.Height())
+				throw new Exception("Supplied image's x offset too large");
+			int total = 0;
+			for (int x = 0; x < simg.Height(); ++x) {
+				for (int y = 0; y < simg.Width(); ++y) {
+					if (refimg[x+startx,y+starty] != simg[x,y]) ++total;
 				}
 			}
 			return total;

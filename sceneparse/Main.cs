@@ -141,9 +141,9 @@ namespace sceneparse
 			int swidth = s.Width();
 			int sheight = s.Height();
 			for (int i = 0; i < 9; ++i) {
-				rpixprop[i+1] = new int[rwidth+2*i+2,rheight+2*i+2];
+				rpixprop[i+1] = new int[rwidth,rheight];
 				spixprop[i+1] = new int[swidth+2*i+2,sheight+2*i+2];
-				rpixprop[i].PixelProp8Exp(rpixprop[i+1]);
+				rpixprop[i].PixelProp8(rpixprop[i+1]);
 				spixprop[i].PixelProp8Exp(spixprop[i+1]);
 			}
 			int rsheightdiff = rheight-sheight+1;
@@ -153,8 +153,8 @@ namespace sceneparse
 			for (int i = 9; i >= 0; --i) {
 				int csheight = sheight+2*i;
 				int cswidth = swidth+2*i;
-				for (int y = 0; y < rsheightdiff; ++y) {
-					for (int x = 0; x < rswidthdiff; ++x) {
+				for (int y = 0; y < rheight-csheight+1; ++y) {
+					for (int x = 0; x < rwidth-cswidth+1; ++x) {
 						//total[x,y] += weight*rpixprop[i].Diff(spixprop[i], x, y);
 						int loctot = 0;
 						//for (int ly = 0; ly < y; ++ly) {

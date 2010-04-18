@@ -29,12 +29,14 @@ namespace sceneparse
 {
 	public delegate void NodeActionDelegate(IVisNode n);
 	public delegate int HeuristicDelegate(IVisNode n);
+	public delegate bool TerminationDelegate(IVisNode n);
 	
 	public interface ISearchAlgorithm {
 		C5.IntervalHeap<IVisNode> Agenda {get; set;}
 		Dictionary<int[,], IVisNode> Visited {get; set;}
 		NodeActionDelegate NodeAction {get; set;}
 		HeuristicDelegate NodeHeuristic {get; set;}
+		TerminationDelegate NodeTermination {get; set;}
 		int Lifetime {get; set;}
 		void Add(IVisNode n);
 		void Extend(IEnumerable<IVisNode> nl);
@@ -48,6 +50,7 @@ namespace sceneparse
 		public NodeActionDelegate NodeAction {get; set;}
 		public int Lifetime {get; set;}
 		public HeuristicDelegate NodeHeuristic {get; set;}
+		public TerminationDelegate NodeTermination {get; set;}
 		public void Add(IVisNode n) {
 			this.Agenda.Add(n);
 			this.Visited.Add(n.Data, n);
@@ -64,11 +67,20 @@ namespace sceneparse
 	}
 	
 	public class SearchAstar : BaseSearchAlgorithm {
+		public SearchAstar(NodeActionDelegate nadel, HeuristicDelegate heudel, TerminationDelegate termdel) {
+			Agenda = new C5.IntervalHeap<IVisNode>(new VisNodeComparer());
+			Visited = new Dictionary<int[,], IVisNode>(new MatrixEqualityComparerInt());
+			NodeAction = nadel;
+			NodeHeuristic = heudel;
+			NodeTermination = termdel;
+			Lifetime = int.MaxValue;
+		}
 		public SearchAstar(NodeActionDelegate nadel, HeuristicDelegate heudel) {
 			Agenda = new C5.IntervalHeap<IVisNode>(new VisNodeComparer());
 			Visited = new Dictionary<int[,], IVisNode>(new MatrixEqualityComparerInt());
 			NodeAction = nadel;
 			NodeHeuristic = heudel;
+			NodeTermination = (IVisNode v) => {return false;};
 			Lifetime = int.MaxValue;
 		}
 		public SearchAstar(NodeActionDelegate nadel) {
@@ -76,6 +88,7 @@ namespace sceneparse
 			Visited = new Dictionary<int[,], IVisNode>(new MatrixEqualityComparerInt());
 			NodeAction = nadel;
 			NodeHeuristic = (IVisNode v) => {return 0;};
+			NodeTermination = (IVisNode v) => {return false;};
 			Lifetime = int.MaxValue;
 		}
 		public override bool Next() {
@@ -88,6 +101,7 @@ namespace sceneparse
 				cn = Agenda.DeleteMin();
 			}
 			NodeAction(cn);
+			if (NodeTermination(cn)) return false;
 			var nvals = cn.Next();
 			foreach (var x in nvals) {
 				x.Heuv = NodeHeuristic(x);

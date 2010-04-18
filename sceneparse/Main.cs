@@ -205,6 +205,7 @@ namespace sceneparse
 			int[,] refimg = null;
 			int[,] img1 = null;
 			bool show_help = false;
+			bool useheuristic = false;
 			IVisNode geno = null;
 			IVisNode[] genos = null;
 			int numiter = int.MaxValue;
@@ -232,6 +233,11 @@ namespace sceneparse
 						var nv = v.DeepCopy();
 						if (!nv.Contains(".")) nv = "sceneparse."+nv;
 						geno = (IVisNode)Activator.CreateInstance(Type.GetType(nv));
+					}},
+				{"u|uheu", "use heuristic", (string v) => {
+						if (v != null) {
+							useheuristic = true;
+						}
 					}},
 				{"c|compare", "compare images", (string v) => {
 						if (v != null) {
@@ -265,7 +271,7 @@ namespace sceneparse
 				ShowHelp(opset);
 				return;
 			}
-			if (genos != null) {
+			if (genos != null || geno != null) {
 				int imgn = 0;
 				var search = new SearchAstar((IVisNode cn) => {
 					Console.WriteLine(cn.Describe());
@@ -274,22 +280,27 @@ namespace sceneparse
 					cn.SerializeToFile("out"+imgn);
 					++imgn;
 				});
+				if (useheuristic) {
+				search.NodeHeuristic = (IVisNode cn) => {
+					//return 0; // disable heuristic
+					int tx = 0;
+					int ty = 0;
+					return SlidingImgComp2(refimg, cn.Data, ref tx, ref ty);
+				};
+				search.NodeTermination = (IVisNode cn) => {
+					if (cn.Heuv <= 1000) {
+						Console.WriteLine("heuristic value is "+cn.Heuv);
+						return true;
+					}
+					Console.WriteLine("current heuv is"+cn.Heuv);
+					return false;
+				};
+				}
 				search.Lifetime = numiter;
-				search.Extend(genos);
-				search.Run();
-			}
-			if (geno != null) {
-				//geno.Initialize();
-				int imgn = 0;
-				var search = new SearchAstar((IVisNode cn) => {
-					Console.WriteLine(cn.Describe());
-					Console.WriteLine();
-					cn.Data.ToPNG("out"+imgn);
-					cn.SerializeToFile("out"+imgn);
-					++imgn;
-				});
-				search.Lifetime = numiter;
-				search.Add(geno);
+				if (genos != null)
+					search.Extend(genos);
+				else if (geno != null)
+					search.Add(geno);
 				search.Run();
 			}
 		}

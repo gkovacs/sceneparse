@@ -151,7 +151,24 @@ namespace sceneparse
 			for (int i = 9; i >= 0; --i) {
 				for (int y = 0; y <= rheight-sheight; ++y) {
 					for (int x = 0; x <= rwidth-swidth; ++x) {
-						total[x,y] += weight*rpixprop[i].Diff(spixprop[i], x, y);
+						//total[x,y] += weight*rpixprop[i].Diff(spixprop[i], x, y);
+						int loctot = 0;
+						for (int ly = 0; ly < y; ++ly) {
+							for (int lx = 0; lx < x; ++lx) {
+								if (rpixprop[i][lx,ly] != 0) ++loctot;
+							}
+						}
+						for (int ny = 0; ny < sheight; ++ny) {
+							for (int nx = 0; nx < swidth; ++nx) {
+								if (rpixprop[i][nx+x,ny+y] != spixprop[i][nx,ny]) ++loctot;
+							}
+						}
+						for (int ly = sheight; ly < rheight; ++ly) {
+							for (int lx = swidth; lx < rwidth; ++lx) {
+								if (rpixprop[i][lx,ly] != 0) ++loctot;
+							}
+						}
+						total[x,y] += weight*loctot;
 					}
 				}
 				--weight;

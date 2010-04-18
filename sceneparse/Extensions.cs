@@ -100,8 +100,8 @@ namespace sceneparse
 			if (starty+simg.Height() > refimg.Height())
 				throw new Exception("Supplied image's x offset too large");
 			int total = 0;
-			for (int x = 0; x < simg.Height(); ++x) {
-				for (int y = 0; y < simg.Width(); ++y) {
+			for (int y = 0; y < simg.Height(); ++y) {
+				for (int x = 0; x < simg.Width(); ++x) {
 					if (refimg[x+startx,y+starty] != simg[x,y]) ++total;
 				}
 			}

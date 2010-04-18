@@ -544,6 +544,125 @@ namespace sceneparse
 			}
 		}
 		
+		public static void PixelProp8Exp(this int[,] b1, int[,] b2) {
+			// topleft corner
+			if (b1[0,0] > 0 ||
+				b1[1,0] > 0 ||
+				b1[0,1] > 0 ||
+				b1[1,1] > 0) {
+				b2[1,1] = 255;
+			}
+			// topright corner
+			if (b1[b1.LastX(),0] > 0 ||
+				b1[b1.LastX()-1,0] > 0 ||
+				b1[b1.LastX(),1] > 0 ||
+				b1[b1.LastX()-1,1] > 0) {
+				b2[b1.LastX()+1,1] = 255;
+			}
+			// bottomleft corner
+			if (b1[0,b1.LastY()] > 0 ||
+				b1[1,b1.LastY()] > 0 ||
+				b1[0,b1.LastY()-1] > 0 ||
+			    b1[1,b1.LastY()-1] > 0) {
+				b2[1,b1.LastY()+1] = 255;
+			}
+			// bottomright corner
+			if (b1[b1.LastX(),b1.LastY()] > 0 ||
+				b1[b1.LastX()-1,b1.LastY()] > 0 ||
+				b1[b1.LastX(),b1.LastY()-1] > 0 ||
+			    b1[b1.LastX()-1,b1.LastY()-1] > 0) {
+				b2[b1.LastX()+1,b1.LastY()+1] = 255;
+			}
+			// left row
+			for (int y = 1; y < b1.LastY(); ++y) {
+				if (b1[0,y] > 0 ||
+					b1[1,y] > 0 ||
+					b1[0,y-1] > 0 ||
+					b1[0,y+1] > 0 ||
+				    b1[1,y+1] > 0 ||
+				    b1[1,y-1] > 0) {
+					b2[1,y+1] = 255;
+				}
+			}
+			// right row
+			for (int y = 1; y < b1.LastY(); ++y) {
+				if (b1[b1.LastX(),y] > 0 ||
+					b1[b1.LastX()-1,y] > 0 ||
+					b1[b1.LastX(),y-1] > 0 ||
+					b1[b1.LastX(),y+1] > 0 ||
+				    b1[b1.LastX()-1,y-1] > 0 ||
+				    b1[b1.LastX()-1,y+1] > 0) {
+					b2[b1.LastX()+1,y+1] = 255;
+				}
+			}
+			// top row
+			for (int x = 1; x < b1.LastX(); ++x) {
+				if (b1[x,0] > 0 ||
+					b1[x,1] > 0 ||
+					b1[x-1,0] > 0 ||
+					b1[x+1,0] > 0 ||
+				    b1[x-1,1] > 0 ||
+				    b1[x+1,1] > 0) {
+					b2[x+1,1] = 255;
+				}
+			}
+			// bottom row
+			for (int x = 1; x < b1.LastX(); ++x) {
+				if (b1[x,b1.LastY()] > 0 ||
+					b1[x,b1.LastY()-1] > 0 ||
+					b1[x-1,b1.LastY()] > 0 ||
+					b1[x+1,b1.LastY()] > 0 ||
+				    b1[x-1,b1.LastY()-1] > 0 ||
+				    b1[x+1,b1.LastY()-1] > 0) {
+					b2[x+1,b1.LastY()+1] = 255;
+				}
+			}
+			// center
+			for (int x = 2; x < b1.LastX()-1; ++x) {
+				for (int y = 2; y < b1.LastY()-1; ++y) {
+					if (b1[x,y] > 0 ||
+						b1[x,y-1] > 0 ||
+						b1[x,y+1] > 0 ||
+						b1[x-1,y] > 0 ||
+						b1[x+1,y] > 0 ||
+					    b1[x-1,y-1] > 0 ||
+					    b1[x-1,y+1] > 0 ||
+					    b1[x+1,y-1] > 0 ||
+					    b1[x+1,y+1] > 0) {
+						b2[x+1,y+1] = 255;
+					}
+				}
+			}
+			// left edge
+			for (int y = 0; y < b1.Height(); ++y) {
+				if (b1[0,y] > 0)
+					b2[0,y+1] = 255;
+			}
+			// right edge
+			for (int y = 0; y < b1.Height(); ++y) {
+				if (b1[b1.LastX(),y] > 0)
+					b2[b1.LastX()+2,y+1] = 255;
+			}
+			// top edge
+			for (int x = 0; x < b1.Width(); ++x) {
+				if (b1[x,0] > 0)
+					b2[x+1,0] = 255;
+			}
+			// bottom edge
+			for (int x = 0; x < b1.Width(); ++x) {
+				if (b1[x,b1.LastY()] > 0)
+					b2[x+1,b1.LastY()+2] = 255;
+			}
+			// topleft corner
+			if (b1[0,0] > 0) b2[0,0] = 255;
+			// topright corner
+			if (b1[b1.LastX(),0] > 0) b2[b1.LastX()+2,0] = 255;
+			// bottomleft corner
+			if (b1[0,b1.LastY()] > 0) b2[0,b1.LastY()+2] = 255;
+			// bottomright corner
+			if (b1[b1.LastX(),b1.LastY()] > 0) b2[b1.LastX()+2,b1.LastY()+2] = 255;
+		}
+		
 		public static void PixelProp(this int[,] b1, int[,] b2) {
 			// topleft corner
 			if (b1[0,0] > 0 ||

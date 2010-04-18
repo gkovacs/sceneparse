@@ -141,36 +141,44 @@ namespace sceneparse
 			int swidth = s.Width();
 			int sheight = s.Height();
 			for (int i = 0; i < 9; ++i) {
-				rpixprop[i+1] = new int[rwidth,rheight];
-				spixprop[i+1] = new int[swidth,sheight];
-				rpixprop[i].PixelProp8(rpixprop[i+1]);
-				spixprop[i].PixelProp8(spixprop[i+1]);
+				rpixprop[i+1] = new int[rwidth+2*i+2,rheight+2*i+2];
+				spixprop[i+1] = new int[swidth+2*i+2,sheight+2*i+2];
+				rpixprop[i].PixelProp8Exp(rpixprop[i+1]);
+				spixprop[i].PixelProp8Exp(spixprop[i+1]);
 			}
+			int rsheightdiff = rheight-sheight+1;
+			int rswidthdiff = rwidth-swidth+1;
 			int[,] total = new int[rwidth-swidth+1,rheight-sheight+1];
 			int weight = 30;
 			for (int i = 9; i >= 0; --i) {
-				for (int y = 0; y <= rheight-sheight; ++y) {
-					for (int x = 0; x <= rwidth-swidth; ++x) {
+				int csheight = sheight+2*i;
+				int cswidth = swidth+2*i;
+				for (int y = 0; y < rsheightdiff; ++y) {
+					for (int x = 0; x < rswidthdiff; ++x) {
 						//total[x,y] += weight*rpixprop[i].Diff(spixprop[i], x, y);
 						int loctot = 0;
-						for (int ly = 0; ly < y; ++ly) {
-							for (int lx = 0; lx < x; ++lx) {
-								if (rpixprop[i][lx,ly] != 0) ++loctot;
-							}
-						}
-						for (int ny = 0; ny < sheight; ++ny) {
-							for (int nx = 0; nx < swidth; ++nx) {
+						//for (int ly = 0; ly < y; ++ly) {
+						//	for (int lx = 0; lx < x; ++lx) {
+						//		if (rpixprop[i][lx,ly] != 0) ++loctot;
+						//	}
+						//}
+						for (int ny = 0; ny < csheight; ++ny) {
+							for (int nx = 0; nx < cswidth; ++nx) {
 								if (rpixprop[i][nx+x,ny+y] != spixprop[i][nx,ny]) ++loctot;
 							}
 						}
-						for (int ly = sheight; ly < rheight; ++ly) {
-							for (int lx = swidth; lx < rwidth; ++lx) {
-								if (rpixprop[i][lx,ly] != 0) ++loctot;
-							}
-						}
+						//for (int ly = sheight; ly < rheight; ++ly) {
+						//	for (int lx = swidth; lx < rwidth; ++lx) {
+						//		if (rpixprop[i][lx,ly] != 0) ++loctot;
+						//	}
+						//}
 						total[x,y] += weight*loctot;
 					}
 				}
+				//rheight += 2;
+				//rwidth += 2;
+				//sheight += 2;
+				//swidth += 2;
 				--weight;
 			}
 			return total.Min(ref xout, ref yout);

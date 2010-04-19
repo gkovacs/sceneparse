@@ -67,7 +67,7 @@ namespace sceneparse
 		public int[] BaseRefDiff;
 		public int[][,] RefImgProp;
 		public int[][,] BaseImgProp;
-		public int PropDepth = 2;
+		public int PropDepth = 5;
 
 		public PixelPropImageComparer(int[,] refi, int[,] basei) {
 			if (refi.Width() != basei.Width())
@@ -84,7 +84,7 @@ namespace sceneparse
 			BaseRefDiff[0] = RefImgProp[0].Diff(BaseImgProp[0]);
 			int imgwidth = RefImgProp[0].Width();
 			int imgheight = RefImgProp[0].Height();
-			for (int i = 0; i < PropDepth-1; ++i) {
+			for (int i = 0; i < PropDepth-2; ++i) {
 				RefImgProp[i+1] = new int[imgwidth, imgheight];
 				BaseImgProp[i+1] = new int[imgwidth, imgheight];
 				RefImgProp[i].PixelProp8(RefImgProp[i+1]);
@@ -112,7 +112,6 @@ namespace sceneparse
 		}
 		
 		public override int CompareImg(int[,] simg, ref int xout, ref int yout) {
-			//int[,] simg = osimg.PadXY(1, 1, 1, 1); // ugly hack to emulate boundary
 			int rsheightdiff = RefImg.Height()-simg.Height()+1;
 			int rswidthdiff = RefImg.Width()-simg.Width()+1;
 			if (rsheightdiff < 0)
@@ -124,12 +123,12 @@ namespace sceneparse
 			SImgProp[0] = simg.PadXY(PropDepth, PropDepth, PropDepth, PropDepth);
 			int imgwidth = SImgProp[0].Width();
 			int imgheight = SImgProp[0].Height();
-			for (int i = 0; i < PropDepth-1; ++i) {
+			for (int i = 0; i < PropDepth-2; ++i) {
 				SImgProp[i+1] = new int[imgwidth, imgheight];
 				SImgProp[i].PixelProp8(SImgProp[i+1]);
 			}
 			int weight = 2*PropDepth;
-			for (int i = 0; i < PropDepth; ++i) {
+			for (int i = 0; i < PropDepth-1; ++i) {
 				for (int y = 0; y < rsheightdiff; ++y) {
 					for (int x = 0; x < rswidthdiff; ++x) {
 						int loctot = 0;

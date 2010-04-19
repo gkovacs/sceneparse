@@ -210,6 +210,10 @@ namespace sceneparse
 		
 		public static int[,] LoadImage(string imgf) {
 			Console.WriteLine("loading "+imgf);
+			if (!File.Exists(imgf))
+				throw new Exception("image file "+imgf+" not found");
+			if (imgf.EndsWith(".pnm") || imgf.EndsWith(".pbm") || imgf.EndsWith(".pgm") || imgf.EndsWith(".ppm"))
+				return LoadPNM(imgf);
 			var bmp = new Bitmap(imgf);
 			var dat1 = new int[bmp.Width,bmp.Height];
 			for (int x = 0; x < bmp.Width; ++x) {
@@ -218,6 +222,48 @@ namespace sceneparse
 				}
 			}
 			return dat1;
+		}
+		
+		public static int[,] LoadPNM(string imgf) {
+			var textr = new StreamReader(imgf);
+			string pnmformat = textr.ReadLineDiscardComments().Trim();
+			var widthheightl = textr.ReadLineDiscardComments().Trim().Split(' ');
+			int width = widthheightl.First().ToInt();
+			int height = widthheightl.Last().ToInt();
+			int maxval = 0;
+			if (!pnmformat.Contains("P1"))
+				maxval = textr.ReadLineDiscardComments().Trim().ToInt();
+			//maxval = 255; // ignoring value written in file
+			if (pnmformat.Contains("P1"))
+				return LoadPBMData(textr, width, height);
+			else if (pnmformat.Contains("P2"))
+				return LoadPGMData(textr, width, height, maxval);
+			throw new Exception("PNM format "+pnmformat+" not supported");
+		}
+		
+		public static int[,] LoadPGMData(StreamReader textr, int width, int height, int maxval) {
+			int[,] data = new int[width, height];
+			int y = 0;
+			int x = 0;
+			while (true) {
+				string nexts = textr.ReadNextChunkDiscardComments();
+				if (nexts == null) break;
+				data[x,y] = nexts.ToInt();
+				++x;
+				if (x >= width) {
+					++y;
+					x = 0;
+				}
+			}
+			if (y != height || x != 0) {
+				throw new Exception("specified dimensions not correct, have ("+x.ToString()+","+y.ToString()+") instead of ("+width.ToString()+","+height.ToString()+")");
+			}
+			return data;
+		}
+		
+		public static int[,] LoadPBMData(StreamReader textr, int width, int height) {
+			// TODO
+			return null;
 		}
 		
 		public static void ShowHelp(NDesk.Options.OptionSet p) {
@@ -265,6 +311,14 @@ namespace sceneparse
 						var nv = v.DeepCopy();
 						if (!nv.Contains(".")) nv = "sceneparse."+nv;
 						geno = (IVisNode)Activator.CreateInstance(Type.GetType(nv));
+					}},
+				{"png2pgm=", "png {FILE} to convert", (string v) => {
+						var ots = new StreamWriter(v.Replace(".png", ".pgm"));
+						ots.Write(LoadImage(v).ToPGM());
+						ots.Close();
+					}},
+				{"pnm2png=", "pnm {FILE} to convert", (string v) => {
+						LoadImage(v).ToPNG(v.Replace(".pnm", ".png").Replace(".pbm", ".png").Replace(".pgm", ".png").Replace(".ppm", ".png"));
 					}},
 				{"u|uheu", "use heuristic", (string v) => {
 						if (v != null) {

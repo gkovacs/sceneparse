@@ -191,6 +191,88 @@ namespace sceneparse
 			return o;
 		}
 		
+		public static string TrimHash(this string s) {
+			string outs = "";
+			foreach (char x in s) {
+				if (x == '#') break;
+				outs += x;
+			}
+			return outs;
+		}
+		
+		public static bool ContainsNonWhitespace(this string s) {
+			foreach (char x in s) {
+				if (!char.IsWhiteSpace(x))
+					return true;
+			}
+			return false;
+		}
+		
+		public static bool ReadUntilAfter(this StreamReader textr, char t) {
+			while (!textr.EndOfStream) {
+				if (textr.Read() == t) {
+					return true;
+				}
+			}
+			return false;
+		}
+		
+		public static string ReadNextChunkDiscardComments(this StreamReader textr) {
+			char c = ' ';
+			while (char.IsWhiteSpace(c)) {
+				if (textr.EndOfStream) return null;
+				c = (char)textr.Read();
+				if (c == '#') {
+					if (!textr.ReadUntilAfter('\n')) return null;
+					if (textr.EndOfStream) return null;
+					c = (char)textr.Read();
+				}
+			}
+			string output = "";
+			while (!char.IsWhiteSpace(c)) {
+				output += c;
+				if (textr.EndOfStream) return output;
+				c = (char)textr.Read();
+				if (c == '#') {
+					textr.ReadUntilAfter('\n');
+					return output;
+				}
+			}
+			return output;
+		}
+		
+		public static string ReadLineDiscardComments(this TextReader textr) {
+			string outtxt = "";
+			while (!outtxt.TrimHash().ContainsNonWhitespace()) {
+				outtxt = textr.ReadLine();
+				if (outtxt == null) return null;
+			}
+			return outtxt;
+		}
+		
+		public static int ToInt(this string s) {
+			return int.Parse(s);
+		}
+		
+		public static string ToPGM(this int[,] v) {
+			string o = "P2\n"+v.Width().ToString()+" "+v.Height().ToString()+"\n255\n";
+			for (int y = 0; y < v.Height(); ++y) {
+				for (int x = 0; x < v.Width(); ++x) {
+					o += v[x,y].ToString().PadLeft(4, ' ');
+				}
+				o += "\n\n";
+			}
+			return o;
+		}
+		
+		public static T First<T>(this T[] v) {
+			return v[0];
+		}
+		
+		public static T Last<T>(this T[] v) {
+			return v[v.Length-1];
+		}
+		
 		public static bool MatrixEquals<T>(this T[,] v, T[,] o) where T : IEquatable<T> {
 			if (v.Width() != o.Width() || v.Height() != o.Height())
 				return false;
@@ -468,7 +550,9 @@ namespace sceneparse
 		}
 		
 		public static void ToPNG(this int[,] b1, string fn) {
-			b1.ToBitmap().Save(fn+".png");
+			var nfn = fn.DeepCopy();
+			if (!nfn.Contains(".png")) nfn += ".png";
+			b1.ToBitmap().Save(nfn);
 		}
 		
 		public static void PixelProp8(this int[,] b1, int[,] b2) {

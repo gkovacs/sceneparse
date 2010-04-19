@@ -51,6 +51,7 @@
     <Compile Include="Extensions.cs" />
     <Compile Include="VisNode.cs" />
     <Compile Include="Search.cs" />
+    <Compile Include="ImageComparer.cs" />
   </ItemGroup>
   <Import Project="$(MSBuildBinPath)\Microsoft.CSharp.targets" />
 </Project>

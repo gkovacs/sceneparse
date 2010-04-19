@@ -149,8 +149,8 @@ namespace sceneparse
 			int rsheightdiff = rheight-sheight+1;
 			int rswidthdiff = rwidth-swidth+1;
 			int[,] total = new int[rwidth-swidth+1,rheight-sheight+1];
-			int weight = 30;
-			for (int i = 9; i >= 0; --i) {
+			int weight = 20;
+			for (int i = 0; i < 10; --i) {
 				int csheight = sheight+2*i;
 				int cswidth = swidth+2*i;
 				for (int y = 0; y < rheight-csheight+1; ++y) {
@@ -179,7 +179,7 @@ namespace sceneparse
 				//rwidth += 2;
 				//sheight += 2;
 				//swidth += 2;
-				--weight;
+				++weight;
 			}
 			return total.Min(ref xout, ref yout);
 		}
@@ -273,7 +273,10 @@ namespace sceneparse
 							} else {
 								int xout = 0;
 								int yout = 0;
-								int heuv = SlidingImgComp2(refimg, img1, ref xout, ref yout);
+								var imgc = new ImageComparer(refimg);
+								//int heuv = 0;
+								int heuv = imgc.CompareImg(img1, ref xout, ref yout);
+								//int heuv = SlidingImgComp2(refimg, img1, ref xout, ref yout);
 								Console.WriteLine(heuv+" at "+xout+","+yout);
 							}
 						}

@@ -191,6 +191,16 @@ namespace sceneparse
 			return o;
 		}
 		
+		public static string ReplaceExtension(this string s, string newext) {
+			string outs = "";
+			foreach (char x in s) {
+				if (x == '.') break;
+				outs += x;
+			}
+			outs += "."+newext;
+			return outs;
+		}
+		
 		public static string TrimHash(this string s) {
 			string outs = "";
 			foreach (char x in s) {
@@ -254,6 +264,22 @@ namespace sceneparse
 			return int.Parse(s);
 		}
 		
+		public static void ToPNG(this int[,] b1, string fn) {
+			b1.ToBitmap().Save(fn.ReplaceExtension("png"));
+		}
+		
+		public static void ToPGM(this int[,] v, string fn) {
+			var ots = new StreamWriter(fn.ReplaceExtension("pgm"));
+			ots.Write(v.ToPGM());
+			ots.Close();
+		}
+		
+		public static void ToPBM(this int[,] v, string fn) {
+			var ots = new StreamWriter(fn.ReplaceExtension("pbm"));
+			ots.Write(v.ToPBM());
+			ots.Close();
+		}
+		
 		public static string ToPGM(this int[,] v) {
 			string o = "P2\n"+v.Width().ToString()+" "+v.Height().ToString()+"\n255\n";
 			for (int y = 0; y < v.Height(); ++y) {
@@ -261,6 +287,18 @@ namespace sceneparse
 					o += v[x,y].ToString().PadLeft(4, ' ');
 				}
 				o += "\n\n";
+			}
+			return o;
+		}
+		
+		public static string ToPBM(this int[,] v) {
+			string o = "P1\n"+v.Width().ToString()+" "+v.Height().ToString()+"\n";
+			for (int y = 0; y < v.Height(); ++y) {
+				for (int x = 0; x < v.Width(); ++x) {
+					if (v[x,y] > 0) o += "0";
+					else o += "1";
+				}
+				o += "\n";
 			}
 			return o;
 		}
@@ -540,19 +578,14 @@ namespace sceneparse
 			var o = new Bitmap(b1.Width(), b1.Height());
 			for (int x = 0; x < b1.Width(); ++x) {
 				for (int y = 0; y < b1.Height(); ++y) {
-					if (b1[x,y] > 0)
-						o.SetPixel(x,y,Color.Red);
+					if (b1[x,y] > 0) {
+						o.SetPixel(x,y,Color.White);
+					}
 					else
 						o.SetPixel(x,y,Color.Black);
 				}
 			}
 			return o;
-		}
-		
-		public static void ToPNG(this int[,] b1, string fn) {
-			var nfn = fn.DeepCopy();
-			if (!nfn.Contains(".png")) nfn += ".png";
-			b1.ToBitmap().Save(nfn);
 		}
 		
 		public static void PixelProp8(this int[,] b1, int[,] b2) {

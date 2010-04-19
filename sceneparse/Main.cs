@@ -226,19 +226,20 @@ namespace sceneparse
 		
 		public static int[,] LoadPNM(string imgf) {
 			var textr = new StreamReader(imgf);
-			string pnmformat = textr.ReadLineDiscardComments().Trim();
-			var widthheightl = textr.ReadLineDiscardComments().Trim().Split(' ');
-			int width = widthheightl.First().ToInt();
-			int height = widthheightl.Last().ToInt();
+			string pnmformat = textr.ReadNextChunkDiscardComments();
+			if (pnmformat != "P1" && pnmformat != "P2")
+				throw new Exception("PNM format "+pnmformat+" not supported");
+			int width = textr.ReadNextChunkDiscardComments().ToInt();
+			int height = textr.ReadNextChunkDiscardComments().ToInt();
 			int maxval = 0;
-			if (!pnmformat.Contains("P1"))
-				maxval = textr.ReadLineDiscardComments().Trim().ToInt();
+			if (pnmformat != "P1")
+				maxval = textr.ReadNextChunkDiscardComments().ToInt();
 			//maxval = 255; // ignoring value written in file
-			if (pnmformat.Contains("P1"))
+			if (pnmformat == "P1")
 				return LoadPBMData(textr, width, height);
-			else if (pnmformat.Contains("P2"))
+			else if (pnmformat == "P2")
 				return LoadPGMData(textr, width, height, maxval);
-			throw new Exception("PNM format "+pnmformat+" not supported");
+			throw new Exception("PNM format "+pnmformat+" didn't match supported");
 		}
 		
 		public static int[,] LoadPGMData(StreamReader textr, int width, int height, int maxval) {
@@ -258,12 +259,37 @@ namespace sceneparse
 			if (y != height || x != 0) {
 				throw new Exception("specified dimensions not correct, have ("+x.ToString()+","+y.ToString()+") instead of ("+width.ToString()+","+height.ToString()+")");
 			}
+			textr.Close();
 			return data;
 		}
 		
 		public static int[,] LoadPBMData(StreamReader textr, int width, int height) {
-			// TODO
-			return null;
+			int[,] data = new int[width, height];
+			int y = 0;
+			int x = 0;
+			while (!textr.EndOfStream) {
+				int nextv = textr.Read();
+				if (nextv == (int)'0') {
+					data[x,y] = 255;
+					++x;
+					if (x >= width) {
+						++y;
+						x = 0;
+					}
+				} else if (nextv == (int)'1') {
+					data[x,y] = 0;
+					++x;
+					if (x >= width) {
+						++y;
+						x = 0;
+					}
+				}
+			}
+			if (y != height || x != 0) {
+				throw new Exception("specified dimensions not correct, have ("+x.ToString()+","+y.ToString()+") instead of ("+width.ToString()+","+height.ToString()+")");
+			}
+			textr.Close();
+			return data;
 		}
 		
 		public static void ShowHelp(NDesk.Options.OptionSet p) {
@@ -312,13 +338,14 @@ namespace sceneparse
 						if (!nv.Contains(".")) nv = "sceneparse."+nv;
 						geno = (IVisNode)Activator.CreateInstance(Type.GetType(nv));
 					}},
-				{"png2pgm=", "png {FILE} to convert", (string v) => {
-						var ots = new StreamWriter(v.Replace(".png", ".pgm"));
-						ots.Write(LoadImage(v).ToPGM());
-						ots.Close();
+				{"topgm=", "png {FILE} to convert", (string v) => {
+						LoadImage(v).ToPGM(v.ReplaceExtension("pgm"));
 					}},
-				{"pnm2png=", "pnm {FILE} to convert", (string v) => {
-						LoadImage(v).ToPNG(v.Replace(".pnm", ".png").Replace(".pbm", ".png").Replace(".pgm", ".png").Replace(".ppm", ".png"));
+				{"topbm=", "png {FILE} to convert", (string v) => {
+						LoadImage(v).ToPBM(v.ReplaceExtension("pbm"));
+					}},
+				{"topng=", "pnm {FILE} to convert", (string v) => {
+						LoadImage(v).ToPNG(v.ReplaceExtension("png"));
 					}},
 				{"u|uheu", "use heuristic", (string v) => {
 						if (v != null) {

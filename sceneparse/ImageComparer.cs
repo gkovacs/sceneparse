@@ -23,17 +23,53 @@ using System;
 
 namespace sceneparse
 {
+	public interface IImageComparer {
+		int CompareImg(int[,] simg, ref int xout, ref int yout);
+		int[,] RefImg {get; set;}
+		int[,] BaseImg {get; set;}
+	}
+	
+	public abstract class BaseImageComparer : IImageComparer {
+		public int[,] RefImg {get; set;}
+		public int[,] BaseImg {get; set;}
+		public virtual int CompareImg(int[,] simg, ref int xout, ref int yout) {return 0;}
+	}
+	
+	public class SlidingPixelDiffImageComparer : BaseImageComparer {
+		
+		public SlidingPixelDiffImageComparer(int[,] refi, int[,] basei) {
+			if (refi.Width() != basei.Width())
+				throw new Exception("Reference and Base image width mismatch");
+			if (refi.Height() != basei.Height())
+				throw new Exception("Reference and Base image height mismatch");
+			RefImg = refi;
+			BaseImg = basei;
+		}
+		
+		public SlidingPixelDiffImageComparer(int[,] refi)
+			: this(refi, new int[refi.Width(), refi.Height()]) {}
+		
+		public override int CompareImg(int[,] simg, ref int xout, ref int yout) {
+			int rsdiffheight = RefImg.Height()-simg.Height()+1;
+			int rsdiffwidth = RefImg.Width()-simg.Width()+1;
+			int[,] total = new int[rsdiffwidth,rsdiffheight];
+			for (int y = 0; y < rsdiffheight; ++y) {
+				for (int x = 0; x < rsdiffwidth; ++x) {
+					total[x,y] = RefImg.Diff(simg, x, y);
+				}
+			}
+			return total.Min(ref xout, ref yout);
+		}
+	}
 
-	public class ImageComparer
+	public class PixelPropImageComparer : BaseImageComparer
 	{
-		public int[,] RefImg;
-		public int[,] BaseImg;
 		public int[] BaseRefDiff;
 		public int[][,] RefImgProp;
 		public int[][,] BaseImgProp;
 		public int PropDepth = 2;
 
-		public ImageComparer(int[,] refi, int[,] basei) {
+		public PixelPropImageComparer(int[,] refi, int[,] basei) {
 			if (refi.Width() != basei.Width())
 				throw new Exception("Reference and Base image width mismatch");
 			if (refi.Height() != basei.Height())
@@ -57,7 +93,7 @@ namespace sceneparse
 			}
 		}
 		
-		public ImageComparer(int[,] refi)
+		public PixelPropImageComparer(int[,] refi)
 			: this(refi, new int[refi.Width(), refi.Height()]) {}
 		
 		public int BaseRefDiffRange(int scalelev, int[,] simg, int startx, int starty) {
@@ -75,7 +111,7 @@ namespace sceneparse
 			return total;
 		}
 		
-		public int CompareImg(int[,] simg, ref int xout, ref int yout) {
+		public override int CompareImg(int[,] simg, ref int xout, ref int yout) {
 			//int[,] simg = osimg.PadXY(1, 1, 1, 1); // ugly hack to emulate boundary
 			int rsheightdiff = RefImg.Height()-simg.Height()+1;
 			int rswidthdiff = RefImg.Width()-simg.Width()+1;

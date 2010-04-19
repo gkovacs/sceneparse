@@ -231,6 +231,8 @@ namespace sceneparse
 			int[,] img1 = null;
 			bool show_help = false;
 			bool useheuristic = false;
+			bool imgcmp = false;
+			string imgcomparer = "sceneparse.PixelPropImageComparer";
 			IVisNode geno = null;
 			IVisNode[] genos = null;
 			int numiter = int.MaxValue;
@@ -243,6 +245,11 @@ namespace sceneparse
 					}},
 				{"t|itr=", "number of {ITERATIONS} to go", (string v) => {
 						numiter = int.Parse(v);
+					}},
+				{"m|comparer=", "the {COMPARER} to use", (string v) => {
+						imgcomparer = v.DeepCopy();
+						if (!imgcomparer.Contains("ImageComparer")) imgcomparer += "ImageComparer";
+						if (!imgcomparer.Contains(".")) imgcomparer = "sceneparse."+imgcomparer;
 					}},
 				{"l|load=", "object {TYPE} to load", (string v) => {
 						var nv = v.DeepCopy();
@@ -266,19 +273,7 @@ namespace sceneparse
 					}},
 				{"c|compare", "compare images", (string v) => {
 						if (v != null) {
-							if (refimg == null) {
-								Console.WriteLine("need ref img");
-							} else if (img1 == null) {
-								Console.WriteLine("need img");
-							} else {
-								int xout = 0;
-								int yout = 0;
-								var imgc = new ImageComparer(refimg);
-								//int heuv = 0;
-								int heuv = imgc.CompareImg(img1, ref xout, ref yout);
-								//int heuv = SlidingImgComp2(refimg, img1, ref xout, ref yout);
-								Console.WriteLine(heuv+" at "+xout+","+yout);
-							}
+							imgcmp = true;
 						}
 					}},
 				{"h|help", "show this message and exit", (string v) => {
@@ -298,6 +293,23 @@ namespace sceneparse
 			if (show_help) {
 				ShowHelp(opset);
 				return;
+			}
+			if (imgcmp) {
+				if (refimg == null) {
+					Console.WriteLine("need ref img");
+				} else if (img1 == null) {
+					Console.WriteLine("need img");
+				} else {
+					int xout = 0;
+					int yout = 0;
+					object[] activatorargs = {refimg};
+					IImageComparer imgc = (IImageComparer)Activator.CreateInstance(Type.GetType(imgcomparer), activatorargs);
+					//IImageComparer imgc = new PixelPropImageComparer(refimg);
+					//int heuv = 0;
+					int heuv = imgc.CompareImg(img1, ref xout, ref yout);
+					//int heuv = SlidingImgComp2(refimg, img1, ref xout, ref yout);
+					Console.WriteLine(heuv+" at "+xout+","+yout);
+				}
 			}
 			if (genos != null || geno != null) {
 				int imgn = 0;

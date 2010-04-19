@@ -51,7 +51,7 @@ namespace sceneparse
 		public int Lifetime {get; set;}
 		public HeuristicDelegate NodeHeuristic {get; set;}
 		public TerminationDelegate NodeTermination {get; set;}
-		public void Add(IVisNode n) {
+		public virtual void Add(IVisNode n) {
 			this.Agenda.Add(n);
 			this.Visited.Add(n.Data, n);
 		}
@@ -90,6 +90,11 @@ namespace sceneparse
 			NodeHeuristic = (IVisNode v) => {return 0;};
 			NodeTermination = (IVisNode v) => {return false;};
 			Lifetime = int.MaxValue;
+		}
+		public override void Add(IVisNode n) {
+			n.Heuv = NodeHeuristic(n);
+			this.Agenda.Add(n);
+			this.Visited.Add(n.Data, n);
 		}
 		public override bool Next() {
 			if (Lifetime != int.MaxValue) {

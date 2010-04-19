@@ -383,8 +383,7 @@ namespace sceneparse
 				} else {
 					int xout = 0;
 					int yout = 0;
-					object[] activatorargs = {refimg};
-					IImageComparer imgc = (IImageComparer)Activator.CreateInstance(Type.GetType(imgcomparer), activatorargs);
+					IImageComparer imgc = (IImageComparer)Activator.CreateInstance(Type.GetType(imgcomparer), new object[] {refimg});
 					//IImageComparer imgc = new PixelPropImageComparer(refimg);
 					//int heuv = 0;
 					int heuv = imgc.CompareImg(img1, ref xout, ref yout);
@@ -397,16 +396,17 @@ namespace sceneparse
 				var search = new SearchAstar((IVisNode cn) => {
 					Console.WriteLine(cn.Describe());
 					Console.WriteLine();
-					cn.Data.ToPNG("out"+imgn);
+					cn.Data.ToPBM("out"+imgn);
 					cn.SerializeToFile("out"+imgn);
 					++imgn;
 				});
 				if (useheuristic) {
+				IImageComparer imgc = (IImageComparer)Activator.CreateInstance(Type.GetType(imgcomparer), new object[] {refimg});
 				search.NodeHeuristic = (IVisNode cn) => {
 					//return 0; // disable heuristic
 					int tx = 0;
 					int ty = 0;
-					return SlidingImgComp2(refimg, cn.Data, ref tx, ref ty);
+					return imgc.CompareImg(cn.Data, ref tx, ref ty);
 				};
 				search.NodeTermination = (IVisNode cn) => {
 					if (cn.Heuv <= 1000) {

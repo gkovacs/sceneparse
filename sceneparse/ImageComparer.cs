@@ -127,7 +127,7 @@ namespace sceneparse
 				SImgProp[i+1] = new int[imgwidth, imgheight];
 				SImgProp[i].PixelProp8(SImgProp[i+1]);
 			}
-			int weight = 2*PropDepth;
+			int weight = 3*(PropDepth-1)/2;
 			for (int i = 0; i < PropDepth-1; ++i) {
 				for (int y = 0; y < rsheightdiff; ++y) {
 					for (int x = 0; x < rswidthdiff; ++x) {

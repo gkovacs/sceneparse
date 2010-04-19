@@ -91,13 +91,21 @@ namespace sceneparse
 				SImgProp[i+1] = new int[imgwidth, imgheight];
 				SImgProp[i].PixelProp8(SImgProp[i+1]);
 			}
+			int weight = 2*PropDepth;
 			for (int i = 0; i < PropDepth; ++i) {
 				for (int y = 0; y < rsheightdiff; ++y) {
 					for (int x = 0; x < rswidthdiff; ++x) {
-						total[x,y] = BaseRefDiff[i]-BaseRefDiffRange(i, x+PropDepth-i, x+PropDepth+simg.Width(), y+PropDepth-i, y+PropDepth+simg.Height());//+RefImgProp[i].Diff(SImgProp[i], x, y);
-						//total[x,y] = ;
+						int loctot = 0;
+						loctot += BaseRefDiff[i]-BaseRefDiffRange(i, x+PropDepth-i, x+PropDepth+i+simg.Width(), y+PropDepth-i, y+PropDepth+i+simg.Height());
+						for (int ny = PropDepth-i; ny < PropDepth+i+simg.Height(); ++ny) {
+							for (int nx = PropDepth-i; nx < PropDepth+i+simg.Width(); ++nx) {
+								if (SImgProp[i][nx,ny] != RefImgProp[i][x+nx,y+ny]) ++loctot;
+							}
+						}
+						total[x,y] = loctot*weight;
 					}
 				}
+				--weight;
 			}
 			return total.Min(ref xout, ref yout);
 		}

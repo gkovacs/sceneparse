@@ -108,6 +108,24 @@ namespace sceneparse
 			return total;
 		}
 		
+		public static int Diff(this int[,] refimg, int[,] simg, int startx, int width, int starty, int height) {
+			if (width > simg.Width())
+				throw new Exception("Comparison width larger than supplied image");
+			if (height > simg.Height())
+				throw new Exception("Comparison height larger than supplied image");
+			if (startx+width > refimg.Width())
+				throw new Exception("Supplied image's x offset too large");
+			if (starty+height > refimg.Height())
+				throw new Exception("Supplied image's x offset too large");
+			int total = 0;
+			for (int y = 0; y < height; ++y) {
+				for (int x = 0; x < width; ++x) {
+					if (refimg[x+startx,y+starty] != simg[x,y]) ++total;
+				}
+			}
+			return total;
+		}
+		
 		public static void Extend<T>(this Queue<T> v, IEnumerable<T> n) {
 			foreach (T x in n) {
 				v.Enqueue(x);

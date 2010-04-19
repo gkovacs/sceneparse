@@ -31,12 +31,12 @@ namespace sceneparse
 		public int[] BaseRefDiff;
 		public int[][,] RefImgProp;
 		public int[][,] BaseImgProp;
-		public int PropDepth = 3;
+		public int PropDepth = 2;
 
 		public ImageComparer(int[,] refi, int[,] basei) {
 			if (refi.Width() != basei.Width())
 				throw new Exception("Reference and Base image width mismatch");
-			if (refi.Height() != basei.Width())
+			if (refi.Height() != basei.Height())
 				throw new Exception("Reference and Base image height mismatch");
 			RefImg = refi;
 			BaseImg = basei;
@@ -76,6 +76,7 @@ namespace sceneparse
 		}
 		
 		public int CompareImg(int[,] simg, ref int xout, ref int yout) {
+			//int[,] simg = osimg.PadXY(1, 1, 1, 1); // ugly hack to emulate boundary
 			int rsheightdiff = RefImg.Height()-simg.Height()+1;
 			int rswidthdiff = RefImg.Width()-simg.Width()+1;
 			if (rsheightdiff < 0)

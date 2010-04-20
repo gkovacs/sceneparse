@@ -184,7 +184,7 @@ namespace sceneparse
 			Name = "SquareN";
 			Data = new int[3,3] {{255,255,255},{255,255,255},{255,255,255}};
 			MaxCost = 100;
-			TCostCons = new int[] {1,1};
+			TCostCons = new int[] {0,0};
 			Transforms = new VisTrans[] {
 				Expand,
 				Contract,
@@ -273,7 +273,7 @@ namespace sceneparse
 			Name = "TowerN";
 			Data = new int[1,1] {{255}};
 			MaxCost = 100;
-			TCostCons = new int[] {1};
+			TCostCons = new int[] {0};
 			Transforms = new VisTrans[] {
 				ExpandX,
 				ExpandY,

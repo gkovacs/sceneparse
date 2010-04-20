@@ -119,7 +119,7 @@ namespace sceneparse
 				//throw new Exception("Supplied image height too large");
 			if (rswidthdiff <= 0)
 				return int.MaxValue;
-				//throw new Exception("Supplied image width too large");			
+				//throw new Exception("Supplied image width too large");
 			int[,] total = new int[rswidthdiff,rsheightdiff];
 			var SImgProp = new int[PropDepth][,];
 			SImgProp[0] = simg.PadXY(PropDepth, PropDepth, PropDepth, PropDepth);

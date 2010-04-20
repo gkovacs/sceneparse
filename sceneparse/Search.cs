@@ -109,12 +109,10 @@ namespace sceneparse
 			if (NodeTermination(cn)) return false;
 			var nvals = cn.Next();
 			foreach (var x in nvals) {
-				x.Heuv = NodeHeuristic(x);
 				if (Visited.ContainsKey(x.Data)) {
 					continue;
 				} else {
-					Visited.Add(x.Data, x);
-					Agenda.Add(x);
+					Add(x);
 				}
 			}
 			return true;

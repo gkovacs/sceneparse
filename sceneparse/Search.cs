@@ -37,6 +37,7 @@ namespace sceneparse
 		NodeActionDelegate NodeAction {get; set;}
 		HeuristicDelegate NodeHeuristic {get; set;}
 		TerminationDelegate NodeTermination {get; set;}
+		NodeActionDelegate NewBestNode {get; set;}
 		int Lifetime {get; set;}
 		void Add(IVisNode n);
 		void Extend(IEnumerable<IVisNode> nl);
@@ -91,6 +92,10 @@ namespace sceneparse
 		
 		public override void Add(IVisNode n) {
 			n.Heuv = NodeHeuristic(n);
+			if (n.Heuv < BestHeu) {
+				NewBestNode(n);
+				BestHeu = n.Heuv;
+			}
 			this.Agenda.Add(n);
 			this.Visited.Add(n.Data, n);
 		}
@@ -104,10 +109,6 @@ namespace sceneparse
 				cn = Agenda.DeleteMin();
 			}
 			NodeAction(cn);
-			if (cn.Heuv < BestHeu) {
-				NewBestNode(cn);
-				BestHeu = cn.Heuv;
-			}
 			if (NodeTermination(cn)) return false;
 			var nvals = cn.Next();
 			foreach (var x in nvals) {

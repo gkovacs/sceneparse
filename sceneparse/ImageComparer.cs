@@ -159,8 +159,8 @@ namespace sceneparse
 		public int[] xcoords;
 		public int[] ycoords;
 		public int[] minvals;
-		public int numcoords = 30;
-		public bool minvalsvalid = false;
+		public int numcoords = 50;
+		//public bool minvalsvalid = false;
 		
 		public CachedPixelPropImageComparer(int[,] refi, int[,] basei)
 			: base(refi, basei) {}
@@ -171,7 +171,14 @@ namespace sceneparse
 		public override NodeActionDelegate NewBestNode {
 			get {return (IVisNode cn) => {
 					Console.WriteLine("new best node with heuv "+cn.Heuv);
-					UpdateCachedCoords(base.CompareImgAllCoords(cn.Data));
+					var total = base.CompareImgAllCoords(cn.Data);
+					UpdateCachedCoords(total);
+					cn.Heuv = minvals[0];
+					//Console.WriteLine("updated heuv to "+cn.Heuv);
+					//Console.WriteLine("xcoords are "+xcoords.MkString());
+					//Console.WriteLine("ycoords are "+ycoords.MkString());
+					//Console.WriteLine("minvals are "+minvals.MkString());
+					//Console.WriteLine("total are "+total.MkString());
 				};}
 		}
 		
@@ -194,7 +201,7 @@ namespace sceneparse
 					}
 				}
 			}
-			minvalsvalid = true;
+			//minvalsvalid = true;
 		}
 		
 		public override int CompareImg(int[,] simg, ref int xout, ref int yout) {
@@ -228,9 +235,9 @@ namespace sceneparse
 			for (int i = 0; i < PropDepth-1; ++i) {
 				for (int j = 0; j < numcoords; ++j) {
 					int x = xcoords[j];
-					if (x >= rswidthdiff) continue;
+					//if (x >= rswidthdiff) continue;
 					int y = ycoords[j];
-					if (x >= rsheightdiff) continue;
+					//if (x >= rsheightdiff) continue;
 						int loctot = 0;
 						loctot += BaseRefDiff[i]-BaseRefDiffRange(i, x+PropDepth-i, x+PropDepth+i+simg.Width(), y+PropDepth-i, y+PropDepth+i+simg.Height());
 						for (int ny = PropDepth-i; ny < PropDepth+i+simg.Height(); ++ny) {

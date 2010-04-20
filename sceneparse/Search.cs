@@ -104,11 +104,11 @@ namespace sceneparse
 				cn = Agenda.DeleteMin();
 			}
 			NodeAction(cn);
-			if (NodeTermination(cn)) return false;
 			if (cn.Heuv < BestHeu) {
 				NewBestNode(cn);
 				BestHeu = cn.Heuv;
 			}
+			if (NodeTermination(cn)) return false;
 			var nvals = cn.Next();
 			foreach (var x in nvals) {
 				if (Visited.ContainsKey(x.Data)) {

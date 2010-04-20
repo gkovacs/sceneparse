@@ -402,6 +402,7 @@ namespace sceneparse
 				});
 				if (useheuristic) {
 				IImageComparer imgc = (IImageComparer)Activator.CreateInstance(Type.GetType(imgcomparer), new object[] {refimg});
+				search.NewBestNode = imgc.NewBestNode;
 				search.NodeHeuristic = (IVisNode cn) => {
 					//return 0; // disable heuristic
 					int tx = 0;

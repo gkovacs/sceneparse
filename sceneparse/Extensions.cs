@@ -45,6 +45,61 @@ namespace sceneparse
 			return a.GetLength(1)-1;
 		}
 		
+		public static void ShiftLeft<T>(this T[] a, T v) {
+			ShiftLeft(a, v, a.Length-1);
+		}
+		
+		public static void ShiftLeft<T>(this T[] a, T v, int idx) {
+			for (int i = 1; i < idx+1; ++i) {
+				a[i-1] = a[i];
+			}
+			a[idx] = v;
+		}
+		
+		public static void ShiftRight<T>(this T[] a, T v) {
+			ShiftRight(a, v, 0);
+		}
+		
+		public static void ShiftRight<T>(this T[] a, T v, int idx) {
+			for (int i = a.Length-1; i > idx; --i) {
+				a[i] = a[i-1];
+			}
+			a[idx] = v;
+		}
+		
+		public static int SortedIdx<T>(this T[] a, T v) where T : IComparable<T> {
+			for (int i = 0; i < a.Length; ++i) {
+				if (a[i].CompareTo(v) > 0) // a[i] > v
+					return i;
+			}
+			throw new Exception("item greater than everything in array");
+		}
+		
+		public static int MinInsertIncreasing<T>(this T[] a, T v) where T : IComparable<T> {
+			// array should be in increasing order.
+			// item inserted only if less than maximal element in array.
+			// array kept sorted.
+			// returns index to which item was inserted, or -1 if not inserted
+			if (v.CompareTo(a.Last()) >= 0) // v >= a.Last()
+				return -1;
+			int sortedidx = a.SortedIdx(v);
+			a.ShiftRight(v, sortedidx);
+			return sortedidx;
+		}
+		
+		public static int Min(this int[] a, ref int minidxout) {
+			int minidx = 0;
+			int minval = a[0];
+			for (int i = 0; i < a.Length; ++i) {
+				if (a[i] < minval) {
+					minidx = i;
+					minval = a[i];
+				}
+			}
+			minidxout = minidx;
+			return minval;
+		}
+		
 		public static int Min(this int[,] a, ref int xout, ref int yout) {
 			int xmax = 0;
 			int ymax = 0;
@@ -138,6 +193,12 @@ namespace sceneparse
 			}
 		}
 		
+		public static void SetAll<T>(this T[] v, T val) {
+			for (int x = 0; x < v.Length; ++x) {
+				v[x] = val;
+			}
+		}
+		
 		public static void SetAll<T>(this T[,] v, T val) {
 			for (int y = 0; y < v.Height(); ++y) {
 				for (int x = 0; x < v.Width(); ++x) {
@@ -178,6 +239,15 @@ namespace sceneparse
 			for (int y = 0; y < v.Height(); ++y) {
 				o[xo,y] = v[xi,y];
 			}
+		}
+		
+		public static string MkString<T>(this IEnumerable<T> v) {
+			string o = "{ ";
+			foreach (var x in v) {
+				o += x.ToString()+", ";
+			}
+			o += "}";
+			return o;
 		}
 		
 		public static string MkString(this int[,] v) {

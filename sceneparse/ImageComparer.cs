@@ -27,12 +27,16 @@ namespace sceneparse
 		int CompareImg(int[,] simg, ref int xout, ref int yout);
 		int[,] RefImg {get; set;}
 		int[,] BaseImg {get; set;}
+		NodeActionDelegate NewBestNode {get;}
 	}
 	
 	public abstract class BaseImageComparer : IImageComparer {
 		public int[,] RefImg {get; set;}
 		public int[,] BaseImg {get; set;}
 		public virtual int CompareImg(int[,] simg, ref int xout, ref int yout) {return 0;}
+		public virtual NodeActionDelegate NewBestNode {
+			get {return (IVisNode cn) => {};}
+		}
 	}
 	
 	public class SlidingPixelDiffImageComparer : BaseImageComparer {
@@ -111,16 +115,14 @@ namespace sceneparse
 			return total;
 		}
 		
-		public override int CompareImg(int[,] simg, ref int xout, ref int yout) {
+		public int[,] CompareImgAllCoords(int[,] simg) {
 			int rsheightdiff = RefImg.Height()-simg.Height()+1;
 			int rswidthdiff = RefImg.Width()-simg.Width()+1;
-			if (rsheightdiff <= 0)
-				return int.MaxValue;
-				//throw new Exception("Supplied image height too large");
-			if (rswidthdiff <= 0)
-				return int.MaxValue;
-				//throw new Exception("Supplied image width too large");
 			int[,] total = new int[rswidthdiff,rsheightdiff];
+			if (rsheightdiff <= 0 || rswidthdiff <= 0) {
+				total.SetAll(int.MaxValue);
+				return total;
+			}
 			var SImgProp = new int[PropDepth][,];
 			SImgProp[0] = simg.PadXY(PropDepth, PropDepth, PropDepth, PropDepth);
 			int imgwidth = SImgProp[0].Width();
@@ -145,7 +147,106 @@ namespace sceneparse
 				}
 				--weight;
 			}
-			return total.Min(ref xout, ref yout);
+			return total;
+		}
+		
+		public override int CompareImg(int[,] simg, ref int xout, ref int yout) {
+			return CompareImgAllCoords(simg).Min(ref xout, ref yout);
+		}
+	}
+	
+	public class CachedPixelPropImageComparer : PixelPropImageComparer {
+		public int[] xcoords;
+		public int[] ycoords;
+		public int[] minvals;
+		public int numcoords = 30;
+		public bool minvalsvalid = false;
+		
+		public CachedPixelPropImageComparer(int[,] refi, int[,] basei)
+			: base(refi, basei) {}
+		
+		public CachedPixelPropImageComparer(int[,] refi)
+			: base(refi) {}
+		
+		public override NodeActionDelegate NewBestNode {
+			get {return (IVisNode cn) => {
+					Console.WriteLine("new best node with heuv "+cn.Heuv);
+					UpdateCachedCoords(base.CompareImgAllCoords(cn.Data));
+				};}
+		}
+		
+		public void UpdateCachedCoords(int[,] total) {
+			if (minvals == null) {
+				minvals = new int[numcoords];
+				xcoords = new int[numcoords];
+				ycoords = new int[numcoords];
+			} else {
+				xcoords.SetAll(0);
+				ycoords.SetAll(0);
+			}
+			minvals.SetAll(int.MaxValue);
+			for (int y = 0; y < total.Height(); ++y) {
+				for (int x = 0; x < total.Width(); ++x) {
+					int sortedidx = minvals.MinInsertIncreasing(total[x,y]);
+					if (sortedidx != -1) { // new minimum
+						xcoords.ShiftRight(x, sortedidx);
+						ycoords.ShiftRight(y, sortedidx);
+					}
+				}
+			}
+			minvalsvalid = true;
+		}
+		
+		public override int CompareImg(int[,] simg, ref int xout, ref int yout) {
+			int rsheightdiff = RefImg.Height()-simg.Height()+1;
+			int rswidthdiff = RefImg.Width()-simg.Width()+1;
+			if (rsheightdiff <= 0)
+				return int.MaxValue;
+				//throw new Exception("Supplied image height too large");
+			if (rswidthdiff <= 0)
+				return int.MaxValue;
+				//throw new Exception("Supplied image width too large");
+			if (minvals == null) {
+				UpdateCachedCoords(base.CompareImgAllCoords(simg));
+				return minvals[0];
+			}
+			//if (minvalsvalid) {
+			//	minvalsvalid = false;
+			//	return minvals[0];
+			//}
+			int[] total = new int[numcoords];
+			total.SetAll(int.MaxValue);
+			var SImgProp = new int[PropDepth][,];
+			SImgProp[0] = simg.PadXY(PropDepth, PropDepth, PropDepth, PropDepth);
+			int imgwidth = SImgProp[0].Width();
+			int imgheight = SImgProp[0].Height();
+			for (int i = 0; i < PropDepth-2; ++i) {
+				SImgProp[i+1] = new int[imgwidth, imgheight];
+				SImgProp[i].PixelProp8(SImgProp[i+1]);
+			}
+			int weight = 3*(PropDepth-1)/2;
+			for (int i = 0; i < PropDepth-1; ++i) {
+				for (int j = 0; j < numcoords; ++j) {
+					int x = xcoords[j];
+					if (x >= rswidthdiff) continue;
+					int y = ycoords[j];
+					if (x >= rsheightdiff) continue;
+						int loctot = 0;
+						loctot += BaseRefDiff[i]-BaseRefDiffRange(i, x+PropDepth-i, x+PropDepth+i+simg.Width(), y+PropDepth-i, y+PropDepth+i+simg.Height());
+						for (int ny = PropDepth-i; ny < PropDepth+i+simg.Height(); ++ny) {
+							for (int nx = PropDepth-i; nx < PropDepth+i+simg.Width(); ++nx) {
+								if (SImgProp[i][nx,ny] != RefImgProp[i][x+nx,y+ny]) ++loctot;
+							}
+						}
+						total[j] = loctot*weight;
+				}
+				--weight;
+			}
+			int minidx = 0;
+			int minval = total.Min(ref minidx);
+			xout = xcoords[minidx];
+			yout = ycoords[minidx];
+			return minval;
 		}
 	}
 }

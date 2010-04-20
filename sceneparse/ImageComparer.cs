@@ -25,6 +25,7 @@ namespace sceneparse
 {
 	public interface IImageComparer {
 		int CompareImg(int[,] simg, ref int xout, ref int yout);
+		int CompareImg(IVisNode cn);
 		int[,] RefImg {get; set;}
 		int[,] BaseImg {get; set;}
 		NodeActionDelegate NewBestNode {get;}
@@ -34,6 +35,14 @@ namespace sceneparse
 		public int[,] RefImg {get; set;}
 		public int[,] BaseImg {get; set;}
 		public virtual int CompareImg(int[,] simg, ref int xout, ref int yout) {return 0;}
+		public int CompareImg(IVisNode cn) {
+			int tx = 0;
+			int ty = 0;
+			int outv = CompareImg(cn.Data, ref tx, ref ty);
+			cn.StartX = tx;
+			cn.StartY = ty;
+			return outv;
+		}
 		public virtual NodeActionDelegate NewBestNode {
 			get {return (IVisNode cn) => {};}
 		}

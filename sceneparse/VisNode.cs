@@ -96,6 +96,8 @@ namespace sceneparse
 		//void Initialize();
 		string Describe();
 		IVisNode[] Next();
+		int StartX {get; set;}
+		int StartY {get; set;}
 	}
 	
 	public abstract class BaseVisNode : IVisNode {
@@ -113,6 +115,8 @@ namespace sceneparse
 		public int SerHeight {get; set;}
 		//public VisTransCost[] TCosts {get; set;}
 		public int[] TCostCons {get; set;}
+		public int StartX {get; set;}
+		public int StartY {get; set;}
 		//public virtual int[,] Render () {return null;}
 		//public virtual void Initialize() {}
 		

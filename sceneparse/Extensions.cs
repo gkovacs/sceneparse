@@ -207,6 +207,14 @@ namespace sceneparse
 			}
 		}
 		
+		public static void SetRegion<T>(this T[,] v, T val, int startx, int endx, int starty, int endy) {
+			for (int y = starty; y <= endy; ++y) {
+				for (int x = startx; x <= endx; ++x) {
+					v[x,y] = val;
+				}
+			}
+		}
+		
 		public static void SetRow<T>(this T[,] v, int num, T val) {
 			for (int x = 0; x < v.Width(); ++x) {
 				v[x,num] = val;
@@ -216,6 +224,18 @@ namespace sceneparse
 		public static void SetColumn<T>(this T[,] v, int num, T val) {
 			for (int y = 0; y < v.Height(); ++y) {
 				v[num,y] = val;
+			}
+		}
+		
+		public static void CopyMatrix<T>(this T[,] v, T[,] o, int startx, int starty) {
+			if (o.Width()+startx > v.Width())
+				throw new Exception("copied matrix's width too high");
+			if (o.Height()+starty > v.Height())
+				throw new Exception("copied matrix's height too high");
+			for (int y = 0; y < o.Height(); ++y) {
+				for (int x = 0; x < o.Width(); ++x) {
+					v[startx+x,starty+y] = o[x,y];
+				}
 			}
 		}
 		

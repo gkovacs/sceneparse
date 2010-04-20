@@ -168,6 +168,35 @@ namespace sceneparse
 		}
 	}
 	
+	public class GlobalCachedPixelPropImageComparer : CachedPixelPropImageComparer {
+		public int[] xcoordsloc = new int[numcoords];
+		public int[] ycoordsloc = new int[numcoords];
+		public int[] minvals = new int[numcoords];
+		public GlobalCachedPixelPropImageComparer(int[,] refi, int[,] basei)
+			: base(refi, basei) {}
+		public GlobalCachedPixelPropImageComparer(int[,] refi)
+			: base(refi) {}
+		public override NodeActionDelegate FlushNodeCache {
+			get {return (IVisNode cn) => {
+					Console.WriteLine("flushing new node with heuv "+cn.Heuv);
+					var total = base.CompareImgAllCoords(cn.Data);
+					xcoordsloc.SetAll(0);
+					ycoordsloc.SetAll(0);
+					minvals.SetAll(int.MaxValue);
+					UpdateCachedCoords(total, minvals, xcoordsloc, ycoordsloc);
+					cn.Heuv = minvals[0];
+				};}
+		}
+		public override int CompareImg(IVisNode cn) {
+			int tx = 0;
+			int ty = 0;
+			int outv = CompareImg(cn.Data, ref tx, ref ty, xcoordsloc, ycoordsloc);
+			cn.StartX = tx;
+			cn.StartY = ty;
+			return outv;
+		}
+	}
+	
 	public class CachedPixelPropImageComparer : PixelPropImageComparer {
 		//public int[] xcoordsloc;
 		//public int[] ycoordsloc;

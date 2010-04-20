@@ -30,9 +30,9 @@
   <SerWidth>7</SerWidth>
   <SerHeight>3</SerHeight>
   <TCostCons>
-    <int>1</int>
-    <int>1</int>
-    <int>1</int>
-    <int>1</int>
+    <int>0</int>
+    <int>0</int>
+    <int>0</int>
+    <int>0</int>
   </TCostCons>
 </RectangleN>

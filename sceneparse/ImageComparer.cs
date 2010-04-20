@@ -85,8 +85,6 @@ namespace sceneparse
 		public int[] BaseRefDiff;
 		public int[][,] RefImgProp;
 		public int[][,] BaseImgProp;
-		public Dictionary<int, int>[,,] BaseRefDiffCache;
-		// PropDepth, endx, endy => startx+starty*(Width)
 		public int PropDepth = 5;
 
 		public PixelPropImageComparer(int[,] refi, int[,] basei) {
@@ -111,14 +109,6 @@ namespace sceneparse
 				BaseImgProp[i].PixelProp8(BaseImgProp[i+1]);
 				BaseRefDiff[i+1] = RefImgProp[i+1].Diff(BaseImgProp[i+1]);
 			}
-			BaseRefDiffCache = new Dictionary<int, int>[PropDepth, imgwidth, imgheight];
-			for (int i = 0; i < PropDepth; ++i) {
-				for (int y = 0; y < imgheight; ++y) {
-					for (int x = 0; x < imgwidth; ++x) {
-						BaseRefDiffCache[i,x,y] = new Dictionary<int, int>();
-					}
-				}
-			}
 		}
 		
 		public PixelPropImageComparer(int[,] refi)
@@ -129,20 +119,14 @@ namespace sceneparse
 		//}
 		
 		public int BaseRefDiffRange(int scalelev, int startx, int endx, int starty, int endy) {
-			Dictionary<int, int> cacheddict = BaseRefDiffCache[scalelev, endx, endy];
-			try {
-				return cacheddict[startx+starty*(RefImgProp[0].Width())];
-			} catch (KeyNotFoundException e) {
-				int total = 0;
-				for (int y = starty; y < endy; ++y) {
-					for (int x = startx; x < endx; ++x) {
-						if (RefImgProp[scalelev][x,y] != BaseImgProp[scalelev][x,y])
-							++total;
-					}
+			int total = 0;
+			for (int y = starty; y < endy; ++y) {
+				for (int x = startx; x < endx; ++x) {
+					if (RefImgProp[scalelev][x,y] != BaseImgProp[scalelev][x,y])
+						++total;
 				}
-				cacheddict[startx+starty*(RefImgProp[0].Width())] = total;
-				return total;
 			}
+			return total;
 		}
 		
 		public int[,] CompareImgAllCoords(int[,] simg) {

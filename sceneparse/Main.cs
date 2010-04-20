@@ -407,6 +407,7 @@ namespace sceneparse
 				if (useheuristic) {
 				IImageComparer imgc = (IImageComparer)Activator.CreateInstance(Type.GetType(imgcomparer), new object[] {refimg});
 				search.FlushNodeCache = imgc.FlushNodeCache;
+				search.FullFlushNodeCache = imgc.FullFlushNodeCache;
 				search.NodeHeuristic = (IVisNode cn) => {
 					//return 0; // disable heuristic
 					

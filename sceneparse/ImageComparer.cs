@@ -29,6 +29,7 @@ namespace sceneparse
 		int[,] RefImg {get; set;}
 		int[,] BaseImg {get; set;}
 		NodeActionDelegate FlushNodeCache {get;}
+		NodeActionDelegate FullFlushNodeCache {get;}
 	}
 	
 	public abstract class BaseImageComparer : IImageComparer {
@@ -45,6 +46,9 @@ namespace sceneparse
 		}
 		public virtual NodeActionDelegate FlushNodeCache {
 			get {return (IVisNode cn) => {};}
+		}
+		public virtual NodeActionDelegate FullFlushNodeCache {
+			get {return FlushNodeCache;}
 		}
 	}
 	

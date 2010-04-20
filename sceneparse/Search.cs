@@ -38,6 +38,7 @@ namespace sceneparse
 		HeuristicDelegate NodeHeuristic {get; set;}
 		TerminationDelegate NodeTermination {get; set;}
 		NodeActionDelegate FlushNodeCache {get; set;}
+		NodeActionDelegate FullFlushNodeCache {get; set;}
 		int Lifetime {get; set;}
 		void Add(IVisNode n);
 		void AddNew(IVisNode n);
@@ -55,6 +56,7 @@ namespace sceneparse
 		public HeuristicDelegate NodeHeuristic {get; set;}
 		public TerminationDelegate NodeTermination {get; set;}
 		public NodeActionDelegate FlushNodeCache {get; set;}
+		public NodeActionDelegate FullFlushNodeCache {get; set;}
 		public int BestHeu {get; set;}
 		public virtual void Add(IVisNode n) {
 			this.Agenda.Add(n);
@@ -81,16 +83,20 @@ namespace sceneparse
 	}
 	
 	public class SearchAstar : BaseSearchAlgorithm {
-		public SearchAstar(NodeActionDelegate nadel, HeuristicDelegate heudel, TerminationDelegate termdel, NodeActionDelegate flushncache) {
+		public SearchAstar(NodeActionDelegate nadel, HeuristicDelegate heudel, TerminationDelegate termdel, NodeActionDelegate flushncache, NodeActionDelegate fullflushncache) {
 			Agenda = new C5.IntervalHeap<IVisNode>(new VisNodeComparer());
 			Visited = new Dictionary<int[,], IVisNode>(new MatrixEqualityComparerInt());
 			NodeAction = nadel;
 			NodeHeuristic = heudel;
 			NodeTermination = termdel;
 			FlushNodeCache = flushncache;
+			FullFlushNodeCache = fullflushncache;
 			Lifetime = int.MaxValue;
 			BestHeu = int.MaxValue;
 		}
+		
+		public SearchAstar(NodeActionDelegate nadel, HeuristicDelegate heudel, TerminationDelegate termdel, NodeActionDelegate flushncache)
+			: this(nadel, heudel, termdel, flushncache, flushncache) {}
 		
 		public SearchAstar(NodeActionDelegate nadel, HeuristicDelegate heudel, TerminationDelegate termdel)
 			: this(nadel, heudel, termdel, (IVisNode v) => {}) {}
@@ -102,21 +108,21 @@ namespace sceneparse
 			: this(nadel, (IVisNode v) => {return 0;}) {}
 		
 		public override void AddNew(IVisNode n) {
-			FlushNodeCache(n);
+			FullFlushNodeCache(n);
 			n.Heuv = NodeHeuristic(n);
-			if (n.Heuv < BestHeu) {
-				BestHeu = n.Heuv;
-			}
+			//if (n.Heuv < BestHeu) {
+			//	BestHeu = n.Heuv;
+			//}
 			this.Agenda.Add(n);
 			this.Visited.Add(n.Data, n);
 		}
 		
 		public override void Add(IVisNode n) {
 			n.Heuv = NodeHeuristic(n);
-			if (n.Heuv < BestHeu) {
-				FlushNodeCache(n);
-				BestHeu = n.Heuv;
-			}
+			//if (n.Heuv < BestHeu) {
+			//	FlushNodeCache(n);
+			//	BestHeu = n.Heuv;
+			//}
 			this.Agenda.Add(n);
 			this.Visited.Add(n.Data, n);
 		}
@@ -130,6 +136,10 @@ namespace sceneparse
 				cn = Agenda.DeleteMin();
 			}
 			NodeAction(cn);
+			if (cn.Heuv < BestHeu) {
+				FlushNodeCache(cn);
+				BestHeu = cn.Heuv;
+			}
 			if (NodeTermination(cn)) return false;
 			var nvals = cn.Next();
 			foreach (var x in nvals) {

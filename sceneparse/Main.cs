@@ -424,7 +424,7 @@ namespace sceneparse
 				}
 				search.Lifetime = numiter;
 				if (genos != null)
-					search.ExtendNew(genos);
+					search.AddNewRange(genos);
 				else if (geno != null)
 					search.AddNew(geno);
 				search.Run();

@@ -20,6 +20,7 @@
 //  along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 using System;
+using System.Collections.Generic;
 
 namespace sceneparse
 {
@@ -84,6 +85,8 @@ namespace sceneparse
 		public int[] BaseRefDiff;
 		public int[][,] RefImgProp;
 		public int[][,] BaseImgProp;
+		public Dictionary<int, int>[,,] BaseRefDiffCache;
+		// PropDepth, endx, endy => startx+starty*(Width)
 		public int PropDepth = 5;
 
 		public PixelPropImageComparer(int[,] refi, int[,] basei) {
@@ -108,24 +111,38 @@ namespace sceneparse
 				BaseImgProp[i].PixelProp8(BaseImgProp[i+1]);
 				BaseRefDiff[i+1] = RefImgProp[i+1].Diff(BaseImgProp[i+1]);
 			}
+			BaseRefDiffCache = new Dictionary<int, int>[PropDepth, imgwidth, imgheight];
+			for (int i = 0; i < PropDepth; ++i) {
+				for (int y = 0; y < imgheight; ++y) {
+					for (int x = 0; x < imgwidth; ++x) {
+						BaseRefDiffCache[i,x,y] = new Dictionary<int, int>();
+					}
+				}
+			}
 		}
 		
 		public PixelPropImageComparer(int[,] refi)
 			: this(refi, new int[refi.Width(), refi.Height()]) {}
 		
-		public int BaseRefDiffRange(int scalelev, int[,] simg, int startx, int starty) {
-			return BaseRefDiffRange(scalelev, startx, startx+simg.Width(), starty, starty+simg.Height());
-		}
+		//public int BaseRefDiffRange(int scalelev, int[,] simg, int startx, int starty) {
+		//	return BaseRefDiffRange(scalelev, startx, startx+simg.Width(), starty, starty+simg.Height());
+		//}
 		
 		public int BaseRefDiffRange(int scalelev, int startx, int endx, int starty, int endy) {
-			int total = 0;
-			for (int y = starty; y < endy; ++y) {
-				for (int x = startx; x < endx; ++x) {
-					if (RefImgProp[scalelev][x,y] != BaseImgProp[scalelev][x,y])
-						++total;
+			Dictionary<int, int> cacheddict = BaseRefDiffCache[scalelev, endx, endy];
+			try {
+				return cacheddict[startx+starty*(RefImgProp[0].Width())];
+			} catch (KeyNotFoundException e) {
+				int total = 0;
+				for (int y = starty; y < endy; ++y) {
+					for (int x = startx; x < endx; ++x) {
+						if (RefImgProp[scalelev][x,y] != BaseImgProp[scalelev][x,y])
+							++total;
+					}
 				}
+				cacheddict[startx+starty*(RefImgProp[0].Width())] = total;
+				return total;
 			}
-			return total;
 		}
 		
 		public int[,] CompareImgAllCoords(int[,] simg) {
@@ -317,4 +334,36 @@ namespace sceneparse
 			return minval;
 		}
 	}
+	/*
+	public class FastCachedPixelPropImageComparer : CachedPixelPropImageComparer {
+		public FastCachedPixelPropImageComparer(int[,] refi, int[,] basei)
+			: base(refi, basei) {}
+		public FastCachedPixelPropImageComparer(int[,] refi)
+			: base(refi) {}
+		public override NodeActionDelegate FlushNodeCache {
+			get {return (IVisNode cn) => {
+					Console.WriteLine("flushing new node with heuv "+cn.Heuv);
+					var total = new List<int>(numcoords*5);
+					
+					//var total = base.CompareImgAllCoords(cn.Data);
+					cn.CachedXCoords = new int[numcoords];
+					cn.CachedYCoords = new int[numcoords];
+					int[] minvals = new int[numcoords];
+					minvals.SetAll(int.MaxValue);
+					UpdateCachedCoords(total, minvals, cn.CachedXCoords, cn.CachedYCoords);
+					//xcoords.CopyTo(cn.CachedXCoords, 0);
+					//ycoords.CopyTo(cn.CachedYCoords, 0);
+					cn.Heuv = minvals[0];
+					//Console.WriteLine("updated heuv to "+cn.Heuv);
+					//Console.WriteLine("xcoords are "+xcoords.MkString());
+					//Console.WriteLine("ycoords are "+ycoords.MkString());
+					//Console.WriteLine("minvals are "+minvals.MkString());
+					//Console.WriteLine("total are "+total.MkString());
+				};}
+		}
+		public override NodeActionDelegate FullFlushNodeCache {
+			get {return base.FlushNodeCache;}
+		}
+	}
+	*/
 }

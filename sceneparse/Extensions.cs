@@ -200,9 +200,45 @@ namespace sceneparse
 		}
 		
 		public static void SetAll<T>(this T[,] v, T val) {
-			for (int y = 0; y < v.Height(); ++y) {
-				for (int x = 0; x < v.Width(); ++x) {
+			for (int y = 0; y < v.GetLength(1); ++y) {
+				for (int x = 0; x < v.GetLength(0); ++x) {
 					v[x,y] = val;
+				}
+			}
+		}
+		
+		public static void SetAll<T>(this T[,,] v, T val) {
+			for (int z = 0; z < v.GetLength(2); ++z) {
+				for (int y = 0; y < v.GetLength(1); ++y) {
+					for (int x = 0; x < v.GetLength(0); ++x) {
+						v[x,y,z] = val;
+					}
+				}
+			}
+		}
+		
+		public static void SetAll<T>(this T[,,,] v, T val) {
+			for (int w = 0; w < v.GetLength(3); ++w) {
+				for (int z = 0; z < v.GetLength(2); ++z) {
+					for (int y = 0; y < v.GetLength(1); ++y) {
+						for (int x = 0; x < v.GetLength(0); ++x) {
+							v[x,y,z,w] = val;
+						}
+					}
+				}
+			}
+		}
+		
+		public static void SetAll<T>(this T[,,,,] v, T val) {
+			for (int k = 0; k < v.GetLength(4); ++k) {
+				for (int w = 0; w < v.GetLength(3); ++w) {
+					for (int z = 0; z < v.GetLength(2); ++z) {
+						for (int y = 0; y < v.GetLength(1); ++y) {
+							for (int x = 0; x < v.GetLength(0); ++x) {
+								v[x,y,z,w,k] = val;
+							}
+						}
+					}
 				}
 			}
 		}

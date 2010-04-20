@@ -42,8 +42,8 @@ namespace sceneparse
 		int Lifetime {get; set;}
 		void Add(IVisNode n);
 		void AddNew(IVisNode n);
-		void Extend(IEnumerable<IVisNode> nl);
-		void ExtendNew(IEnumerable<IVisNode> nl);
+		void AddRange(IEnumerable<IVisNode> nl);
+		void AddNewRange(IEnumerable<IVisNode> nl);
 		bool Next();
 		void Run();
 	}
@@ -66,12 +66,12 @@ namespace sceneparse
 			this.Agenda.Add(n);
 			this.Visited.Add(n.Data, n);
 		}
-		public void Extend(IEnumerable<IVisNode> nl) {
+		public void AddRange(IEnumerable<IVisNode> nl) {
 			foreach (var n in nl) {
 				Add(n);
 			}
 		}
-		public void ExtendNew(IEnumerable<IVisNode> nl) {
+		public void AddNewRange(IEnumerable<IVisNode> nl) {
 			foreach (var n in nl) {
 				AddNew(n);
 			}

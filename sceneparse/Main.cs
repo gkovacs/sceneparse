@@ -406,9 +406,10 @@ namespace sceneparse
 				});
 				if (useheuristic) {
 				IImageComparer imgc = (IImageComparer)Activator.CreateInstance(Type.GetType(imgcomparer), new object[] {refimg});
-				search.NewBestNode = imgc.NewBestNode;
+				search.FlushNodeCache = imgc.FlushNodeCache;
 				search.NodeHeuristic = (IVisNode cn) => {
 					//return 0; // disable heuristic
+					
 					return imgc.CompareImg(cn);
 				};
 				search.NodeTermination = (IVisNode cn) => {
@@ -422,9 +423,9 @@ namespace sceneparse
 				}
 				search.Lifetime = numiter;
 				if (genos != null)
-					search.Extend(genos);
+					search.ExtendNew(genos);
 				else if (geno != null)
-					search.Add(geno);
+					search.AddNew(geno);
 				search.Run();
 			}
 		}

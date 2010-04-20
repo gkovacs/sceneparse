@@ -37,10 +37,12 @@ namespace sceneparse
 		NodeActionDelegate NodeAction {get; set;}
 		HeuristicDelegate NodeHeuristic {get; set;}
 		TerminationDelegate NodeTermination {get; set;}
-		NodeActionDelegate NewBestNode {get; set;}
+		NodeActionDelegate FlushNodeCache {get; set;}
 		int Lifetime {get; set;}
 		void Add(IVisNode n);
+		void AddNew(IVisNode n);
 		void Extend(IEnumerable<IVisNode> nl);
+		void ExtendNew(IEnumerable<IVisNode> nl);
 		bool Next();
 		void Run();
 	}
@@ -52,15 +54,24 @@ namespace sceneparse
 		public int Lifetime {get; set;}
 		public HeuristicDelegate NodeHeuristic {get; set;}
 		public TerminationDelegate NodeTermination {get; set;}
-		public NodeActionDelegate NewBestNode {get; set;}
+		public NodeActionDelegate FlushNodeCache {get; set;}
 		public int BestHeu {get; set;}
 		public virtual void Add(IVisNode n) {
+			this.Agenda.Add(n);
+			this.Visited.Add(n.Data, n);
+		}
+		public virtual void AddNew(IVisNode n) {
 			this.Agenda.Add(n);
 			this.Visited.Add(n.Data, n);
 		}
 		public void Extend(IEnumerable<IVisNode> nl) {
 			foreach (var n in nl) {
 				Add(n);
+			}
+		}
+		public void ExtendNew(IEnumerable<IVisNode> nl) {
+			foreach (var n in nl) {
+				AddNew(n);
 			}
 		}
 		public virtual bool Next() {return false;}
@@ -70,13 +81,13 @@ namespace sceneparse
 	}
 	
 	public class SearchAstar : BaseSearchAlgorithm {
-		public SearchAstar(NodeActionDelegate nadel, HeuristicDelegate heudel, TerminationDelegate termdel, NodeActionDelegate nbest) {
+		public SearchAstar(NodeActionDelegate nadel, HeuristicDelegate heudel, TerminationDelegate termdel, NodeActionDelegate flushncache) {
 			Agenda = new C5.IntervalHeap<IVisNode>(new VisNodeComparer());
 			Visited = new Dictionary<int[,], IVisNode>(new MatrixEqualityComparerInt());
 			NodeAction = nadel;
 			NodeHeuristic = heudel;
 			NodeTermination = termdel;
-			NewBestNode = nbest;
+			FlushNodeCache = flushncache;
 			Lifetime = int.MaxValue;
 			BestHeu = int.MaxValue;
 		}
@@ -90,10 +101,20 @@ namespace sceneparse
 		public SearchAstar(NodeActionDelegate nadel)
 			: this(nadel, (IVisNode v) => {return 0;}) {}
 		
+		public override void AddNew(IVisNode n) {
+			FlushNodeCache(n);
+			n.Heuv = NodeHeuristic(n);
+			if (n.Heuv < BestHeu) {
+				BestHeu = n.Heuv;
+			}
+			this.Agenda.Add(n);
+			this.Visited.Add(n.Data, n);
+		}
+		
 		public override void Add(IVisNode n) {
 			n.Heuv = NodeHeuristic(n);
 			if (n.Heuv < BestHeu) {
-				NewBestNode(n);
+				FlushNodeCache(n);
 				BestHeu = n.Heuv;
 			}
 			this.Agenda.Add(n);

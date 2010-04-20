@@ -98,6 +98,8 @@ namespace sceneparse
 		IVisNode[] Next();
 		int StartX {get; set;}
 		int StartY {get; set;}
+		int[] CachedXCoords {get; set;}
+		int[] CachedYCoords {get; set;}
 	}
 	
 	public abstract class BaseVisNode : IVisNode {
@@ -105,7 +107,13 @@ namespace sceneparse
 		public int Height {get {return this.Data.Height();} }
 		public string Name {get; set;}
 		public int Cost {get; set;}
-		public int Heuv {get; set;}
+		private int _Heuv = 0;
+		public int Heuv {
+			get {
+				return _Heuv;
+			} set {
+				_Heuv = value;
+			}}
 		public int HeuvCost {get {return Cost + Heuv;} }
 		public int MaxCost {get; set;}
 		[XmlIgnore] public int[,] Data {get; set;}
@@ -117,6 +125,8 @@ namespace sceneparse
 		public int[] TCostCons {get; set;}
 		public int StartX {get; set;}
 		public int StartY {get; set;}
+		public int[] CachedXCoords {get; set;}
+		public int[] CachedYCoords {get; set;}
 		//public virtual int[,] Render () {return null;}
 		//public virtual void Initialize() {}
 		

@@ -28,14 +28,14 @@ namespace sceneparse
 		int CompareImg(IVisNode cn);
 		int[,] RefImg {get; set;}
 		int[,] BaseImg {get; set;}
-		NodeActionDelegate NewBestNode {get;}
+		NodeActionDelegate FlushNodeCache {get;}
 	}
 	
 	public abstract class BaseImageComparer : IImageComparer {
 		public int[,] RefImg {get; set;}
 		public int[,] BaseImg {get; set;}
 		public virtual int CompareImg(int[,] simg, ref int xout, ref int yout) {return 0;}
-		public int CompareImg(IVisNode cn) {
+		public virtual int CompareImg(IVisNode cn) {
 			int tx = 0;
 			int ty = 0;
 			int outv = CompareImg(cn.Data, ref tx, ref ty);
@@ -43,7 +43,7 @@ namespace sceneparse
 			cn.StartY = ty;
 			return outv;
 		}
-		public virtual NodeActionDelegate NewBestNode {
+		public virtual NodeActionDelegate FlushNodeCache {
 			get {return (IVisNode cn) => {};}
 		}
 	}
@@ -165,10 +165,10 @@ namespace sceneparse
 	}
 	
 	public class CachedPixelPropImageComparer : PixelPropImageComparer {
-		public int[] xcoords;
-		public int[] ycoords;
-		public int[] minvals;
-		public int numcoords = 50;
+		//public int[] xcoordsloc;
+		//public int[] ycoordsloc;
+		//public int[] minvals = new int[numcoords];
+		public const int numcoords = 50;
 		//public bool minvalsvalid = false;
 		
 		public CachedPixelPropImageComparer(int[,] refi, int[,] basei)
@@ -177,11 +177,17 @@ namespace sceneparse
 		public CachedPixelPropImageComparer(int[,] refi)
 			: base(refi) {}
 		
-		public override NodeActionDelegate NewBestNode {
+		public override NodeActionDelegate FlushNodeCache {
 			get {return (IVisNode cn) => {
-					Console.WriteLine("new best node with heuv "+cn.Heuv);
+					Console.WriteLine("flushing new node with heuv "+cn.Heuv);
 					var total = base.CompareImgAllCoords(cn.Data);
-					UpdateCachedCoords(total);
+					cn.CachedXCoords = new int[numcoords];
+					cn.CachedYCoords = new int[numcoords];
+					int[] minvals = new int[numcoords];
+					minvals.SetAll(int.MaxValue);
+					UpdateCachedCoords(total, minvals, cn.CachedXCoords, cn.CachedYCoords);
+					//xcoords.CopyTo(cn.CachedXCoords, 0);
+					//ycoords.CopyTo(cn.CachedYCoords, 0);
 					cn.Heuv = minvals[0];
 					//Console.WriteLine("updated heuv to "+cn.Heuv);
 					//Console.WriteLine("xcoords are "+xcoords.MkString());
@@ -191,16 +197,7 @@ namespace sceneparse
 				};}
 		}
 		
-		public void UpdateCachedCoords(int[,] total) {
-			if (minvals == null) {
-				minvals = new int[numcoords];
-				xcoords = new int[numcoords];
-				ycoords = new int[numcoords];
-			} else {
-				xcoords.SetAll(0);
-				ycoords.SetAll(0);
-			}
-			minvals.SetAll(int.MaxValue);
+		public void UpdateCachedCoords(int[,] total, int[] minvals, int[] xcoords, int[] ycoords) {
 			for (int y = 0; y < total.Height(); ++y) {
 				for (int x = 0; x < total.Width(); ++x) {
 					int sortedidx = minvals.MinInsertIncreasing(total[x,y]);
@@ -213,7 +210,29 @@ namespace sceneparse
 			//minvalsvalid = true;
 		}
 		
+		public override int CompareImg(IVisNode cn) {
+			int tx = 0;
+			int ty = 0;
+			int outv = CompareImg(cn.Data, ref tx, ref ty, cn.CachedXCoords, cn.CachedYCoords);
+			cn.StartX = tx;
+			cn.StartY = ty;
+			return outv;
+		}
+		
 		public override int CompareImg(int[,] simg, ref int xout, ref int yout) {
+			/*if (minvals == null) {
+				minvals = new int[numcoords];
+				minvals.SetAll(int.MaxValue);
+				xcoordsloc = new int[numcoords];
+				xcoordsloc.SetAll(int.MaxValue);
+				ycoordsloc = new int [numcoords];
+				ycoordsloc.SetAll(int.MaxValue);
+			}*/
+			throw new Exception("don't use CompareImg");
+			//return CompareImg(simg, ref xout, ref yout, xcoordsloc, ycoordsloc);
+		}
+		
+		public int CompareImg(int[,] simg, ref int xout, ref int yout, int[] xcoords, int[] ycoords) {
 			int rsheightdiff = RefImg.Height()-simg.Height()+1;
 			int rswidthdiff = RefImg.Width()-simg.Width()+1;
 			if (rsheightdiff <= 0)
@@ -222,10 +241,10 @@ namespace sceneparse
 			if (rswidthdiff <= 0)
 				return int.MaxValue;
 				//throw new Exception("Supplied image width too large");
-			if (minvals == null) {
-				UpdateCachedCoords(base.CompareImgAllCoords(simg));
-				return minvals[0];
-			}
+			//if (xcoords[0] == int.MinValue) {
+			//	UpdateCachedCoords(base.CompareImgAllCoords(simg), xcoords, ycoords);
+			//	return minvals[0];
+			//}
 			//if (minvalsvalid) {
 			//	minvalsvalid = false;
 			//	return minvals[0];

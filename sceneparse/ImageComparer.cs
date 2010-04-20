@@ -114,10 +114,12 @@ namespace sceneparse
 		public override int CompareImg(int[,] simg, ref int xout, ref int yout) {
 			int rsheightdiff = RefImg.Height()-simg.Height()+1;
 			int rswidthdiff = RefImg.Width()-simg.Width()+1;
-			if (rsheightdiff < 0)
-				throw new Exception("Supplied image height too large");
-			if (rswidthdiff < 0)
-				throw new Exception("Supplied image width too large");
+			if (rsheightdiff <= 0)
+				return int.MaxValue;
+				//throw new Exception("Supplied image height too large");
+			if (rswidthdiff <= 0)
+				return int.MaxValue;
+				//throw new Exception("Supplied image width too large");			
 			int[,] total = new int[rswidthdiff,rsheightdiff];
 			var SImgProp = new int[PropDepth][,];
 			SImgProp[0] = simg.PadXY(PropDepth, PropDepth, PropDepth, PropDepth);

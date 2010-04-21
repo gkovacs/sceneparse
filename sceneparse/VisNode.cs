@@ -382,23 +382,37 @@ namespace sceneparse
 			for (int y = 0; y < ths.Data.Height(); ++y) {
 				for (int x = 0; x < ths.Data.Width(); ++x) {
 					if (ths.Data[x,y] > 0 && ths.Data.CountNeighbors(x,y) == 1) {
+						if (ths.Data.Height() <= 0 || ths.Data.Width() <= 0) continue;
+						if (ths.headx < 0 || ths.headx >= ths.Data.Width() || ths.heady < 0 || ths.heady >= ths.Data.Height()) continue;
 						var n = (ChainN)ths.DeepCopyNoData();
 						n.Data = ths.Data.DeepCopy();
 						n.Data[x,y] = 0;
 						if (n.headx == x && n.heady == y) {
 							n.Data.HasSingleNeighbor(x, y, ref n.headx, ref n.heady);
+							if (n.headx < 0 || n.headx >= n.Data.Width() || n.heady < 0 || n.heady >= n.Data.Height()) continue;
 						}
 						if (x == 0 && n.Data.ColumnEquals(0, 0)) {
-							n.Data = n.Data.SliceX(1, n.Data.Height());
+							n.Data = n.Data.SliceX(1, n.Data.Width());
+							--n.headx;
+							if (n.headx < 0 || n.headx >= n.Data.Width() || n.heady < 0 || n.heady >= n.Data.Height()) continue;
+							if (n.Data.Height() <= 0 || n.Data.Width() <= 0) continue;
+							
 						}
 						if (y == 0 && n.Data.RowEquals(0, 0)) {
-							n.Data = n.Data.SliceY(1, n.Data.Width());
+							n.Data = n.Data.SliceY(1, n.Data.Height());
+							--n.heady;
+							if (n.headx < 0 || n.headx >= n.Data.Width() || n.heady < 0 || n.heady >= n.Data.Height()) continue;
+							if (n.Data.Height() <= 0 || n.Data.Width() <= 0) continue;
 						}
 						if (x == n.Data.LastX() && n.Data.ColumnEquals(n.Data.LastX(), 0)) {
-							n.Data = n.Data.SliceX(0, n.Data.Height()-1);
+							n.Data = n.Data.SliceX(0, n.Data.LastX());
+							if (n.headx < 0 || n.headx >= n.Data.Width() || n.heady < 0 || n.heady >= n.Data.Height()) continue;
+							if (n.Data.Height() <= 0 || n.Data.Width() <= 0) continue;
 						}
 						if (y == n.Data.LastY() && n.Data.RowEquals(n.Data.LastY(), 0)) {
-							n.Data = n.Data.SliceY(0, n.Data.Width()-1);
+							n.Data = n.Data.SliceY(0, n.Data.LastY());
+							if (n.headx < 0 || n.headx >= n.Data.Width() || n.heady < 0 || n.heady >= n.Data.Height()) continue;
+							if (n.Data.Height() <= 0 || n.Data.Width() <= 0) continue;
 						}
 						n.Cost += ths.TCostCons[0];
 						retv.AddLast(n);

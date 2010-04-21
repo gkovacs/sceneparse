@@ -135,6 +135,7 @@ namespace sceneparse
 				if (Agenda.IsEmpty) return false;
 				cn = Agenda.DeleteMin();
 			}
+			if (cn.Heuv == int.MaxValue) return false;
 			NodeAction(cn);
 			if (cn.Heuv < BestHeu) {
 				FlushNodeCache(cn);

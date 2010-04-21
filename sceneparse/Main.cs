@@ -315,6 +315,15 @@ namespace sceneparse
 				{"i|img=", "the {IMAGE} file to load", (string v) => {
 						img1 = LoadImage(v);
 					}},
+				{"d|decide=", "comma,separted {LIST} of objects", (string v) => {
+						var objnames = v.Split(',');
+						genos = new IVisNode[objnames.Length];
+						for (int i = 0; i < objnames.Length; ++i) {
+							var nv = objnames[i].DeepCopy();
+							if (!nv.Contains(".")) nv = "sceneparse."+nv;
+							genos[i] = (IVisNode)Activator.CreateInstance(Type.GetType(nv));
+						}
+					}},
 				{"t|itr=", "number of {ITERATIONS} to go", (string v) => {
 						numiter = int.Parse(v);
 					}},
@@ -421,6 +430,8 @@ namespace sceneparse
 				};
 				search.NodeTermination = (IVisNode cn) => {
 					if (cn.Heuv <= 0) {
+						Console.WriteLine("object type is"+cn.Name);
+						Console.WriteLine("object description is"+cn.Describe());
 						Console.WriteLine("heuristic value is "+cn.Heuv);
 						if (rendertarg != null) {
 							rendertarg.CopyMatrix(cn.Data, cn.StartX, cn.StartY);

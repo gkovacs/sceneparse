@@ -258,7 +258,7 @@ namespace sceneparse
 
 		public RectangleN() {
 			Name = "RectangleN";
-			Data = new int[3,3] {{255,255,255},{255,255,255},{255,255,255}};
+			Data = new int[2,3] {{255,255,255},{255,255,255}};
 			MaxCost = 100000;
 			TCostCons = new int[] {1,1,1,1};
 			Transforms = new VisTrans[] {
@@ -446,7 +446,7 @@ namespace sceneparse
 		}
 		public ChainN() {
 			Name = "ChainN";
-			Data = new int[1,1] {{255}};
+			Data = new int[2,1] {{255}, {255}};
 			MaxCost = 100000;
 			TCostCons = new int[] {1,1,1,1};
 			Transforms = new VisTrans[] {

@@ -84,7 +84,7 @@ namespace sceneparse
 		string Name {get; set;}
 		int Cost {get; set;}
 		int Heuv {get; set;}
-		int HeuvCost {get;}
+		double HeuvCost {get;}
 		int MaxCost {get; set;}
 		int[,] Data {get; set;}
 		int[] SerData {get; set;}
@@ -116,7 +116,7 @@ namespace sceneparse
 			} set {
 				_Heuv = value;
 			}}
-		public int HeuvCost {get {return Cost + Heuv;} }
+		public double HeuvCost {get {return Cost/10000.0 + Heuv;} }
 		public int MaxCost {get; set;}
 		[XmlIgnore] public int[,] Data {get; set;}
 		[XmlIgnore] public VisTrans[] Transforms {get; set;}
@@ -217,8 +217,8 @@ namespace sceneparse
 		public SquareN() {
 			Name = "SquareN";
 			Data = new int[3,3] {{255,255,255},{255,255,255},{255,255,255}};
-			MaxCost = 100;
-			TCostCons = new int[] {0,0};
+			MaxCost = 100000;
+			TCostCons = new int[] {1,1};
 			Transforms = new VisTrans[] {
 				Expand,
 				Contract,
@@ -259,8 +259,8 @@ namespace sceneparse
 		public RectangleN() {
 			Name = "RectangleN";
 			Data = new int[3,3] {{255,255,255},{255,255,255},{255,255,255}};
-			MaxCost = 100;
-			TCostCons = new int[] {0,0,0,0};
+			MaxCost = 100000;
+			TCostCons = new int[] {1,1,1,1};
 			Transforms = new VisTrans[] {
 				ExpandX,
 				ExpandY,
@@ -310,8 +310,8 @@ namespace sceneparse
 		public TowerN() {
 			Name = "TowerN";
 			Data = new int[1,1] {{255}};
-			MaxCost = 100;
-			TCostCons = new int[] {0};
+			MaxCost = 100000;
+			TCostCons = new int[] {1};
 			Transforms = new VisTrans[] {
 				ExpandX,
 				ExpandY,
@@ -424,8 +424,8 @@ namespace sceneparse
 		public ChainN() {
 			Name = "ChainN";
 			Data = new int[1,1] {{255}};
-			MaxCost = 100;
-			TCostCons = new int[] {0,0,0,0};
+			MaxCost = 100000;
+			TCostCons = new int[] {1,1,1,1};
 			Transforms = new VisTrans[] {
 				ExpandRight,
 				ExpandLeft,

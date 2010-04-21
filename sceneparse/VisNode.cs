@@ -62,7 +62,8 @@ namespace sceneparse
 	}
 	
 	public delegate IVisNode VisTrans(IVisNode n);
-	public delegate int VisTransCost();
+	public delegate IEnumerable<IVisNode> VisTransMulti(IVisNode n);
+	//public delegate int VisTransCost();
 
 	public interface IDeepCopyable<T> {
 		T DeepCopy();
@@ -90,12 +91,13 @@ namespace sceneparse
 		int SerWidth {get; set;}
 		int SerHeight {get; set;}
 		VisTrans[] Transforms {get; set;}
+		VisTransMulti[] TransformsMulti {get; set;}
 		//VisTransCost[] TCosts {get; set;}
 		int[] TCostCons {get; set;}
 		//int[,] Render();
 		//void Initialize();
 		string Describe();
-		IVisNode[] Next();
+		IEnumerable<IVisNode> Next();
 		int StartX {get; set;}
 		int StartY {get; set;}
 		int[] CachedXCoords {get; set;}
@@ -107,7 +109,7 @@ namespace sceneparse
 		public int Height {get {return this.Data.Height();} }
 		public string Name {get; set;}
 		public int Cost {get; set;}
-		private int _Heuv = 0;
+		protected int _Heuv = 0;
 		public int Heuv {
 			get {
 				return _Heuv;
@@ -118,6 +120,13 @@ namespace sceneparse
 		public int MaxCost {get; set;}
 		[XmlIgnore] public int[,] Data {get; set;}
 		[XmlIgnore] public VisTrans[] Transforms {get; set;}
+		protected VisTransMulti[] _TransformsMulti = new VisTransMulti[0];
+		[XmlIgnore] public VisTransMulti[] TransformsMulti {
+			get {
+				return _TransformsMulti;
+			} set {
+				_TransformsMulti = value;
+			}}
 		public int[] SerData {get; set;}
 		public int SerWidth {get; set;}
 		public int SerHeight {get; set;}
@@ -130,10 +139,20 @@ namespace sceneparse
 		//public virtual int[,] Render () {return null;}
 		//public virtual void Initialize() {}
 		
-		public IVisNode[] Next() {
-			var rv = new IVisNode[Transforms.Length];
-			for (int x = 0; x < Transforms.Length; ++x) {
-				rv[x] = this.Transforms[x](this);
+		public IEnumerable<IVisNode> Next() {
+			var rv = new LinkedList<IVisNode>();
+			foreach (var f in Transforms) {
+				var n = f(this);
+				if (n != null)
+					rv.AddLast(n);
+			}
+			if (TransformsMulti != null) {
+				foreach (var f in TransformsMulti) {
+					var l = f(this);
+					foreach (var n in l) {
+						rv.AddLast(n);
+					}
+				}
 			}
 			return rv;
 		}
@@ -165,6 +184,7 @@ namespace sceneparse
 			n.Heuv = this.Heuv; // not necessary, heuv computed externally
 			n.MaxCost = this.MaxCost;
 			n.Transforms = this.Transforms.DeepCopy();
+			n.TransformsMulti = this.TransformsMulti.DeepCopy();
 			//n.TCosts = o.TCosts.DeepCopy();
 			n.TCostCons = this.TCostCons.DeepCopy();
 			return n;
@@ -191,7 +211,7 @@ namespace sceneparse
 			var n = ths.DeepCopyNoData();
 			n.Data = ths.Data.SliceXY(0,ths.Data.LastX(),0,ths.Data.LastY());
 			n.Cost += ths.TCostCons[0];
-			if (n.Width < 1 || n.Height < 1) n.Cost = n.MaxCost+1;
+			if (n.Width < 1 || n.Height < 1) return null;
 			return n;
 		}
 		public SquareN() {
@@ -225,14 +245,14 @@ namespace sceneparse
 			var n = ths.DeepCopyNoData();
 			n.Data = ths.Data.SliceX(0,ths.Data.LastX());
 			n.Cost += ths.TCostCons[0];
-			if (n.Width < 1 || n.Height < 1) n.Cost = n.MaxCost+1;
+			if (n.Width < 1 || n.Height < 1) return null;
 			return n;
 		}
 		public static IVisNode ContractY(IVisNode ths) {
 			var n = ths.DeepCopyNoData();
 			n.Data = ths.Data.SliceY(0,ths.Data.LastY());
 			n.Cost += ths.TCostCons[0];
-			if (n.Width < 1 || n.Height < 1) n.Cost = n.MaxCost+1;
+			if (n.Width < 1 || n.Height < 1) return null;
 			return n;
 		}
 
@@ -258,28 +278,32 @@ namespace sceneparse
 		public static IVisNode ExpandX(IVisNode thso) {
 			var ths = (TowerN)thso;
 			var n = (TowerN)RectangleN.ExpandX(ths);
-			if (ths.GrowDirection == 2) n.Cost = n.MaxCost+1;
+			if (n == null) return null;
+			if (ths.GrowDirection == 2) return null;
 			else if (ths.GrowDirection == 0) n.GrowDirection = 1;
 			return n;
 		}
 		public static IVisNode ExpandY(IVisNode thso) {
 			var ths = (TowerN)thso;
 			var n = (TowerN)RectangleN.ExpandY(ths);
-			if (ths.GrowDirection == 1) n.Cost = n.MaxCost+1;
+			if (n == null) return null;
+			if (ths.GrowDirection == 1) return null;
 			else if (ths.GrowDirection == 0) n.GrowDirection = 2;
 			return n;
 		}
 		public static IVisNode ContractX(IVisNode thso) {
 			var ths = (TowerN)thso;
 			var n = (TowerN)RectangleN.ContractX(ths);
-			if (ths.GrowDirection == 2) n.Cost = n.MaxCost+1;
+			if (n == null) return null;
+			if (ths.GrowDirection == 2) return null;
 			else if (ths.GrowDirection == 0) n.GrowDirection = 1;
 			return n;
 		}
 		public static IVisNode ContractY(IVisNode thso) {
 			var ths = (TowerN)thso;
 			var n = (TowerN)RectangleN.ContractY(ths);
-			if (ths.GrowDirection == 1) n.Cost = n.MaxCost+1;
+			if (n == null) return null;
+			if (ths.GrowDirection == 1) return null;
 			else if (ths.GrowDirection == 0) n.GrowDirection = 2;
 			return n;
 		}
@@ -364,6 +388,7 @@ namespace sceneparse
 				ExpandDown,
 				ExpandUp,
 			};
+			TransformsMulti = new VisTransMulti[0];
 		}
 	}
 }

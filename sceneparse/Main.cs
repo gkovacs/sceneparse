@@ -393,14 +393,20 @@ namespace sceneparse
 			}
 			if (genos != null || geno != null) {
 				int imgn = 0;
-				int[,] rendertarg = new int[refimg.Width(),refimg.Height()];
+				int[,] rendertarg = null;
+				if (refimg != null) {
+					rendertarg = new int[refimg.Width(),refimg.Height()];
+				}
 				var search = new SearchAstar((IVisNode cn) => {
 					Console.WriteLine(cn.Describe());
 					Console.WriteLine();
-					rendertarg.CopyMatrix(cn.Data, cn.StartX, cn.StartY);
-					rendertarg.ToPBM("out"+imgn);
-					rendertarg.SetRegion(0, cn.StartX, cn.StartX+cn.Data.Width()-1, cn.StartY, cn.StartY+cn.Data.Height()-1);
-					//cn.Data.ToPBM("out"+imgn);
+					if (rendertarg != null) {
+						rendertarg.CopyMatrix(cn.Data, cn.StartX, cn.StartY);
+						rendertarg.ToPBM("out"+imgn);
+						rendertarg.SetRegion(0, cn.StartX, cn.StartX+cn.Data.Width()-1, cn.StartY, cn.StartY+cn.Data.Height()-1);
+					} else {
+						cn.Data.ToPBM("out"+imgn);
+					}
 					cn.SerializeToFile("out"+imgn);
 					++imgn;
 				});
@@ -414,7 +420,7 @@ namespace sceneparse
 					return imgc.CompareImg(cn);
 				};
 				search.NodeTermination = (IVisNode cn) => {
-					if (cn.Heuv <= 100) {
+					if (cn.Heuv <= 10) {
 						Console.WriteLine("heuristic value is "+cn.Heuv);
 						return true;
 					}

@@ -296,4 +296,74 @@ namespace sceneparse
 			};
 		}
 	}
+	
+	public class ChainN : BaseVisNode {
+		public int headx;
+		public int heady;
+		public static IVisNode ExpandRight(IVisNode thso) {
+			var ths = (ChainN)thso;
+			var n = (ChainN)ths.DeepCopyNoData();
+			if (n.headx == ths.Data.LastX()) {
+				n.Data = ths.Data.AddRightColumn();
+			} else {
+				n.Data = ths.Data.DeepCopy();
+			}
+			++n.headx;
+			n.Data[n.headx, n.heady] = 255;
+			n.Cost += ths.TCostCons[0];
+			return n;
+		}
+		public static IVisNode ExpandLeft(IVisNode thso) {
+			var ths = (ChainN)thso;
+			var n = (ChainN)ths.DeepCopyNoData();
+			if (n.headx == 0) {
+				n.Data = ths.Data.AddLeftColumn();
+			} else {
+				n.Data = ths.Data.DeepCopy();
+				--n.headx;
+			}
+			n.Data[n.headx, n.heady] = 255;
+			n.Cost += ths.TCostCons[0];
+			return n;
+		}
+		public static IVisNode ExpandDown(IVisNode thso) {
+			var ths = (ChainN)thso;
+			var n = (ChainN)ths.DeepCopyNoData();
+			if (n.heady == ths.Data.LastY()) {
+				n.Data = ths.Data.AddBottomRow();
+			} else {
+				n.Data = ths.Data.DeepCopy();
+			}
+			++n.heady;
+			n.Data[n.headx, n.heady] = 255;
+			n.Cost += ths.TCostCons[0];
+			return n;
+		}
+		public static IVisNode ExpandUp(IVisNode thso) {
+			var ths = (ChainN)thso;
+			var n = (ChainN)ths.DeepCopyNoData();
+			if (n.heady == 0) {
+				n.Data = ths.Data.AddTopRow();
+			} else {
+				n.Data = ths.Data.DeepCopy();
+				--n.heady;
+			}
+			n.Data[n.headx, n.heady] = 255;
+			n.Cost += ths.TCostCons[0];
+			return n;
+		}
+
+		public ChainN() {
+			Name = "ChainN";
+			Data = new int[1,1] {{255}};
+			MaxCost = 100;
+			TCostCons = new int[] {1,1,1,1};
+			Transforms = new VisTrans[] {
+				ExpandRight,
+				ExpandLeft,
+				ExpandDown,
+				ExpandUp,
+			};
+		}
+	}
 }

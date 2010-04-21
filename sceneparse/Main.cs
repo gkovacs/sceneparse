@@ -422,6 +422,14 @@ namespace sceneparse
 				search.NodeTermination = (IVisNode cn) => {
 					if (cn.Heuv <= 0) {
 						Console.WriteLine("heuristic value is "+cn.Heuv);
+						if (rendertarg != null) {
+							rendertarg.CopyMatrix(cn.Data, cn.StartX, cn.StartY);
+							rendertarg.ToPBM("outresult");
+							rendertarg.SetRegion(0, cn.StartX, cn.StartX+cn.Data.Width()-1, cn.StartY, cn.StartY+cn.Data.Height()-1);
+						} else {
+							cn.Data.ToPBM("outresult");
+						}
+						cn.SerializeToFile("outresult");
 						return true;
 					}
 					Console.WriteLine("current heuv is"+cn.Heuv);

@@ -134,7 +134,7 @@ namespace sceneparse
 			int rswidthdiff = RefImg.Width()-simg.Width()+1;
 			int[,] total = new int[rswidthdiff,rsheightdiff];
 			if (rsheightdiff <= 0 || rswidthdiff <= 0) {
-				total.SetAll(int.MaxValue);
+				//total.SetAll(int.MaxValue);
 				return total;
 			}
 			var SImgProp = new int[PropDepth][,];
@@ -165,7 +165,14 @@ namespace sceneparse
 		}
 		
 		public override int CompareImg(int[,] simg, ref int xout, ref int yout) {
-			return CompareImgAllCoords(simg).Min(ref xout, ref yout);
+			//return CompareImgAllCoords(simg).Min(ref xout, ref yout);
+			var mtrxout = CompareImgAllCoords(simg);
+			if (mtrxout.Width() == 0 || mtrxout.Height() == 0) {
+				xout = 0;
+				yout = 0;
+				return int.MaxValue;
+			}
+			return mtrxout.Min(ref xout, ref yout);
 		}
 	}
 	

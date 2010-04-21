@@ -418,7 +418,9 @@ namespace sceneparse
 				ExpandDown,
 				ExpandUp,
 			};
-			TransformsMulti = new VisTransMulti[0];
+			TransformsMulti = new VisTransMulti[] {
+				ContractMulti,
+			};
 		}
 	}
 }

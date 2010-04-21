@@ -304,7 +304,7 @@ namespace sceneparse
 			bool show_help = false;
 			bool useheuristic = false;
 			bool imgcmp = false;
-			string imgcomparer = "sceneparse.PixelPropImageComparer";
+			string imgcomparer = "sceneparse.FullPixelDiffImageComparer";
 			IVisNode geno = null;
 			IVisNode[] genos = null;
 			int numiter = int.MaxValue;

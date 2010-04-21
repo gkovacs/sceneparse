@@ -70,10 +70,61 @@ namespace sceneparse
 		public override int CompareImg(int[,] simg, ref int xout, ref int yout) {
 			int rsdiffheight = RefImg.Height()-simg.Height()+1;
 			int rsdiffwidth = RefImg.Width()-simg.Width()+1;
+			if (rsdiffwidth <= 0)
+				return int.MaxValue;
+				//throw new Exception("Supplied image height too large");
+			if (rsdiffheight <= 0)
+				return int.MaxValue;
+				//throw new Exception("Supplied image width too large");
 			int[,] total = new int[rsdiffwidth,rsdiffheight];
 			for (int y = 0; y < rsdiffheight; ++y) {
 				for (int x = 0; x < rsdiffwidth; ++x) {
 					total[x,y] = RefImg.Diff(simg, x, y);
+				}
+			}
+			return total.Min(ref xout, ref yout);
+		}
+	}
+	
+	public class FullPixelDiffImageComparer : BaseImageComparer {
+		
+		public int BaseRefDiff;
+		
+		public FullPixelDiffImageComparer(int[,] refi, int[,] basei) {
+			if (refi.Width() != basei.Width())
+				throw new Exception("Reference and Base image width mismatch");
+			if (refi.Height() != basei.Height())
+				throw new Exception("Reference and Base image height mismatch");
+			RefImg = refi;
+			BaseImg = basei;
+			BaseRefDiff = RefImg.Diff(BaseImg);
+		}
+		
+		public FullPixelDiffImageComparer(int[,] refi)
+			: this(refi, new int[refi.Width(), refi.Height()]) {}
+		
+		public override int CompareImg(int[,] simg, ref int xout, ref int yout) {
+			int rsdiffheight = RefImg.Height()-simg.Height()+1;
+			int rsdiffwidth = RefImg.Width()-simg.Width()+1;
+			if (rsdiffwidth <= 0)
+				return int.MaxValue;
+				//throw new Exception("Supplied image height too large");
+			if (rsdiffheight <= 0)
+				return int.MaxValue;
+				//throw new Exception("Supplied image width too large");
+			int[,] total = new int[rsdiffwidth,rsdiffheight];
+			for (int y = 0; y < rsdiffheight; ++y) {
+				for (int x = 0; x < rsdiffwidth; ++x) {
+					int loctot = 0;
+					loctot += BaseRefDiff;
+					for (int ny = 0; ny < simg.Height(); ++ny) {
+						for (int nx = 0; nx < simg.Width(); ++nx) {
+							if (RefImg[x+nx, y+ny] != BaseImg[x+nx, y+ny])
+								--loctot;
+						}
+					}
+					loctot += RefImg.Diff(simg, x, y);
+					total[x,y] = loctot;
 				}
 			}
 			return total.Min(ref xout, ref yout);

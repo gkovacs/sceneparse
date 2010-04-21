@@ -357,7 +357,7 @@ namespace sceneparse
 			Name = "ChainN";
 			Data = new int[1,1] {{255}};
 			MaxCost = 100;
-			TCostCons = new int[] {1,1,1,1};
+			TCostCons = new int[] {0,0,0,0};
 			Transforms = new VisTrans[] {
 				ExpandRight,
 				ExpandLeft,

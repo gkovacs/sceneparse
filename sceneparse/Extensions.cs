@@ -188,9 +188,7 @@ namespace sceneparse
 		}
 		
 		public static void Extend<T>(this C5.IExtensible<T> v, IEnumerable<T> n) {
-			foreach (T x in n) {
-				v.Add(x);
-			}
+			v.AddAll(n);
 		}
 		
 		public static void SetAll<T>(this T[] v, T val) {
@@ -257,10 +255,26 @@ namespace sceneparse
 			}
 		}
 		
+		public static bool RowEquals<T>(this T[,] v, int num, T val) where T : IEquatable<T> {
+			for (int x = 0; x < v.Width(); ++x) {
+				if (!val.Equals(v[x,num]))
+					return false;
+			}
+		    return true;
+		}
+		
 		public static void SetColumn<T>(this T[,] v, int num, T val) {
 			for (int y = 0; y < v.Height(); ++y) {
 				v[num,y] = val;
 			}
+		}
+		
+		public static bool ColumnEquals<T>(this T[,] v, int num, T val) where T : IEquatable<T> {
+			for (int y = 0; y < v.Height(); ++y) {
+				if (!val.Equals(v[num,y]))
+					return false;
+			}
+			return true;
 		}
 		
 		public static void CopyMatrix<T>(this T[,] v, T[,] o, int startx, int starty) {
@@ -435,6 +449,41 @@ namespace sceneparse
 		
 		public static T Last<T>(this T[] v) {
 			return v[v.Length-1];
+		}
+		
+		public static int CountNeighbors<T>(this T[,] v, int x, int y) where T : IEquatable<T> {
+			int total = 0;
+			if (x > 0 && v[x,y].Equals(v[x-1,y])) ++total; // left
+			if (x < v.LastX() && v[x,y].Equals(v[x+1,y])) ++total; // right
+			if (y > 0 && v[x,y].Equals(v[x,y-1])) ++total; // top
+			if (y < v.LastY() && v[x,y].Equals(v[x,y+1])) ++total; // bottom
+			return total;
+		}
+		
+		public static bool HasSingleNeighbor<T>(this T[,] v, int x, int y, ref int xout, ref int yout) where T : IEquatable<T> {
+			int total = 0;
+			if (x > 0 && v[x,y].Equals(v[x-1,y])) { // left
+				xout = x-1;
+				yout = y;
+				++total;
+			}
+			if (x < v.LastX() && v[x,y].Equals(v[x+1,y])) { // right
+				xout = x+1;
+				yout = y;
+				++total;
+			}
+			if (y > 0 && v[x,y].Equals(v[x,y-1])) { // top
+				xout = x;
+				yout = y-1;
+				++total;
+			}
+			if (y < v.LastY() && v[x,y].Equals(v[x,y+1])) { // bottom
+				xout = x;
+				yout = y+1;
+				++total;
+			}
+			if (total == 1) return true;
+			return false;
 		}
 		
 		public static bool MatrixEquals<T>(this T[,] v, T[,] o) where T : IEquatable<T> {

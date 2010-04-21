@@ -420,7 +420,7 @@ namespace sceneparse
 					return imgc.CompareImg(cn);
 				};
 				search.NodeTermination = (IVisNode cn) => {
-					if (cn.Heuv <= 100) {
+					if (cn.Heuv <= 0) {
 						Console.WriteLine("heuristic value is "+cn.Heuv);
 						return true;
 					}

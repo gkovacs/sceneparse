@@ -376,7 +376,37 @@ namespace sceneparse
 			n.Cost += ths.TCostCons[0];
 			return n;
 		}
-
+		public static IEnumerable<IVisNode> ContractMulti(IVisNode thso) {
+			LinkedList<IVisNode> retv = new LinkedList<IVisNode>();
+			var ths = (ChainN)thso;
+			for (int y = 0; y < ths.Data.Height(); ++y) {
+				for (int x = 0; x < ths.Data.Width(); ++x) {
+					if (ths.Data[x,y] > 0 && ths.Data.CountNeighbors(x,y) == 1) {
+						var n = (ChainN)ths.DeepCopyNoData();
+						n.Data = ths.Data.DeepCopy();
+						n.Data[x,y] = 0;
+						if (n.headx == x && n.heady == y) {
+							n.Data.HasSingleNeighbor(x, y, ref n.headx, ref n.heady);
+						}
+						if (x == 0 && n.Data.ColumnEquals(0, 0)) {
+							n.Data = n.Data.SliceX(1, n.Data.Height());
+						}
+						if (y == 0 && n.Data.RowEquals(0, 0)) {
+							n.Data = n.Data.SliceY(1, n.Data.Width());
+						}
+						if (x == n.Data.LastX() && n.Data.ColumnEquals(n.Data.LastX(), 0)) {
+							n.Data = n.Data.SliceX(0, n.Data.Height()-1);
+						}
+						if (y == n.Data.LastY() && n.Data.RowEquals(n.Data.LastY(), 0)) {
+							n.Data = n.Data.SliceY(0, n.Data.Width()-1);
+						}
+						n.Cost += ths.TCostCons[0];
+						retv.AddLast(n);
+					}
+				}
+			}
+			return retv;
+		}
 		public ChainN() {
 			Name = "ChainN";
 			Data = new int[1,1] {{255}};

@@ -376,6 +376,29 @@ namespace sceneparse
 			n.Cost += ths.TCostCons[0];
 			return n;
 		}
+		public static IEnumerable<IVisNode> ExpandMulti(IVisNode thso) {
+			LinkedList<IVisNode> retv = new LinkedList<IVisNode>();
+			var ths = (ChainN)thso;
+			for (int y = 0; y < ths.Data.Height(); ++y) {
+				for (int x = 0; x < ths.Data.Width(); ++x) {
+					if ((ths.Data.Width() == 1 && ths.Data.Height() == 1) || (ths.Data[x,y] > 0 && ths.Data.CountNeighbors(x,y) == 1)) {
+						if (ths.Data.Height() <= 0 || ths.Data.Width() <= 0) continue;
+						if (ths.headx < 0 || ths.headx >= ths.Data.Width() || ths.heady < 0 || ths.heady >= ths.Data.Height()) continue;
+						ths.headx = x;
+						ths.heady = y;
+						var n = ExpandLeft(ths);
+						if (n != null) retv.AddLast(n);
+						n = ExpandRight(ths);
+						if (n != null) retv.AddLast(n);
+						n = ExpandUp(ths);
+						if (n != null) retv.AddLast(n);
+						n = ExpandDown(ths);
+						if (n != null) retv.AddLast(n);
+					}
+				}
+			}
+			return retv;
+		}
 		public static IEnumerable<IVisNode> ContractMulti(IVisNode thso) {
 			LinkedList<IVisNode> retv = new LinkedList<IVisNode>();
 			var ths = (ChainN)thso;
@@ -427,12 +450,13 @@ namespace sceneparse
 			MaxCost = 100000;
 			TCostCons = new int[] {1,1,1,1};
 			Transforms = new VisTrans[] {
-				ExpandRight,
-				ExpandLeft,
-				ExpandDown,
-				ExpandUp,
+				//ExpandRight,
+				//ExpandLeft,
+				//ExpandDown,
+				//ExpandUp,
 			};
 			TransformsMulti = new VisTransMulti[] {
+				ExpandMulti,
 				ContractMulti,
 			};
 		}

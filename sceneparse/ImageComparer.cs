@@ -136,7 +136,7 @@ namespace sceneparse
 		public int[] BaseRefDiff;
 		public int[][,] RefImgProp;
 		public int[][,] BaseImgProp;
-		public int PropDepth = 5;
+		public int PropDepth = 3;
 
 		public PixelPropImageComparer(int[,] refi, int[,] basei) {
 			if (refi.Width() != basei.Width())

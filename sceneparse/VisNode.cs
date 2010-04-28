@@ -263,6 +263,80 @@ namespace sceneparse
 		}
 	}
 	
+	public class RectangleGridN : BaseVisNode {
+		public int[,] DataReal {get; set;}
+		public int GridScale {get; set;}
+		public static IVisNode ExpandX(IVisNode thso) {
+			var ths = (RectangleGridN)thso;
+			var n = (RectangleGridN)ths.DeepCopyNoData();
+			n.DataReal = ths.DataReal.AddRightColumn();
+			n.DataReal.SetColumn(n.DataReal.LastX(), 255);
+			n.Cost += ths.TCostCons[0];
+			n.Data = n.DataReal.ScaleGrid(n.GridScale);
+			return n;
+		}
+		public static IVisNode ExpandY(IVisNode thso) {
+			var ths = (RectangleGridN)thso;
+			var n = (RectangleGridN)ths.DeepCopyNoData();
+			n.DataReal = ths.DataReal.AddBottomRow();
+			n.DataReal.SetRow(n.DataReal.LastY(), 255);
+			n.Cost += ths.TCostCons[0];
+			n.Data = n.DataReal.ScaleGrid(n.GridScale);
+			return n;
+		}
+		public static IVisNode ContractX(IVisNode thso) {
+			var ths = (RectangleGridN)thso;
+			var n = (RectangleGridN)ths.DeepCopyNoData();
+			n.DataReal = ths.DataReal.SliceX(0,ths.DataReal.LastX());
+			n.Cost += ths.TCostCons[0];
+			if (n.DataReal.Width() < 1 || n.DataReal.Height() < 1) return null;
+			n.Data = n.DataReal.ScaleGrid(n.GridScale);
+			return n;
+		}
+		public static IVisNode ContractY(IVisNode thso) {
+			var ths = (RectangleGridN)thso;
+			var n = (RectangleGridN)ths.DeepCopyNoData();
+			n.DataReal = ths.DataReal.SliceY(0,ths.DataReal.LastY());
+			n.Cost += ths.TCostCons[0];
+			if (n.DataReal.Width() < 1 || n.DataReal.Height() < 1) return null;
+			n.Data = n.DataReal.ScaleGrid(n.GridScale);
+			return n;
+		}
+		public static IVisNode ScaleUp(IVisNode thso) {
+			var ths = (RectangleGridN)thso;
+			var n = (RectangleGridN)ths.DeepCopyNoData();
+			++n.GridScale;
+			n.Cost += ths.TCostCons[0];
+			n.Data = n.DataReal.ScaleGrid(n.GridScale);
+			return n;
+		}
+		public static IVisNode ScaleDown(IVisNode thso) {
+			var ths = (RectangleGridN)thso;
+			var n = (RectangleGridN)ths.DeepCopyNoData();
+			--n.GridScale;
+			if (n.GridScale <= 0) return null;
+			n.Cost += ths.TCostCons[0];
+			n.Data = n.DataReal.ScaleGrid(n.GridScale);
+			return n;
+		}
+		public RectangleGridN() {
+			Name = "RectangleGridN";
+			DataReal = new int[1,1] {{255}};
+			GridScale = 1;
+			Data = DataReal.ScaleGrid(GridScale);
+			MaxCost = 100000;
+			TCostCons = new int[] {1};
+			Transforms = new VisTrans[] {
+				ExpandX,
+				ExpandY,
+				ContractX,
+				ContractY,
+				ScaleUp,
+				ScaleDown,
+			};
+		}
+	}
+	
 	public class TowerN : BaseVisNode {
 		public int GrowDirection {get; set;}
 		// 0 = undecided

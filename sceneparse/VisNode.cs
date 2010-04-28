@@ -146,12 +146,10 @@ namespace sceneparse
 				if (n != null)
 					rv.AddLast(n);
 			}
-			if (TransformsMulti != null) {
-				foreach (var f in TransformsMulti) {
-					var l = f(this);
-					foreach (var n in l) {
-						rv.AddLast(n);
-					}
+			foreach (var f in TransformsMulti) {
+				var l = f(this);
+				foreach (var n in l) {
+					rv.AddLast(n);
 				}
 			}
 			return rv;
@@ -317,6 +315,92 @@ namespace sceneparse
 				ExpandY,
 				ContractX,
 				ContractY,
+			};
+		}
+	}
+	
+	public class TowerGridN : BaseVisNode {
+		[XmlIgnore] public int[,] DataReal;
+		public int GridScale = 0;
+		public int GrowDirection = 0;
+		// 0 = undecided
+		// 1 = up/down
+		// 2 = left/right
+		public static IVisNode ExpandX(IVisNode thso) {
+			var ths = (TowerGridN)thso;
+			var n = (TowerGridN)ths.DeepCopyNoData();
+			n.DataReal = ths.DataReal.AddRightColumn();
+			n.DataReal.SetColumn(n.DataReal.LastX(), 255);
+			n.Cost += ths.TCostCons[0];
+			if (ths.GrowDirection == 2) return null;
+			else if (ths.GrowDirection == 0) n.GrowDirection = 1;
+			n.Data = n.DataReal.ScaleGrid(n.GridScale);
+			return n;
+		}
+		public static IVisNode ExpandY(IVisNode thso) {
+			var ths = (TowerGridN)thso;
+			var n = (TowerGridN)ths.DeepCopyNoData();
+			n.DataReal = ths.DataReal.AddBottomRow();
+			n.DataReal.SetRow(n.DataReal.LastY(), 255);
+			n.Cost += ths.TCostCons[0];
+			if (ths.GrowDirection == 1) return null;
+			else if (ths.GrowDirection == 0) n.GrowDirection = 2;
+			n.Data = n.DataReal.ScaleGrid(n.GridScale);
+			return n;
+		}
+		public static IVisNode ContractX(IVisNode thso) {
+			var ths = (TowerGridN)thso;
+			var n = (TowerGridN)ths.DeepCopyNoData();
+			n.DataReal = ths.DataReal.SliceX(0,ths.DataReal.LastX());
+			n.Cost += ths.TCostCons[0];
+			if (n.DataReal.Width() < 1 || n.DataReal.Height() < 1) return null;
+			if (ths.GrowDirection == 2) return null;
+			else if (ths.GrowDirection == 0) n.GrowDirection = 1;
+			n.Data = n.DataReal.ScaleGrid(n.GridScale);
+			return n;
+		}
+		public static IVisNode ContractY(IVisNode thso) {
+			var ths = (TowerGridN)thso;
+			var n = (TowerGridN)ths.DeepCopyNoData();
+			n.DataReal = ths.DataReal.SliceY(0,ths.DataReal.LastY());
+			n.Cost += ths.TCostCons[0];
+			if (n.DataReal.Width() < 1 || n.DataReal.Height() < 1) return null;
+			if (ths.GrowDirection == 1) return null;
+			else if (ths.GrowDirection == 0) n.GrowDirection = 2;
+			n.Data = n.DataReal.ScaleGrid(n.GridScale);
+			return n;
+		}
+		public static IVisNode ScaleUp(IVisNode thso) {
+			var ths = (TowerGridN)thso;
+			var n = (TowerGridN)ths.DeepCopyNoData();
+			++n.GridScale;
+			n.Cost += ths.TCostCons[0];
+			n.Data = n.DataReal.ScaleGrid(n.GridScale);
+			return n;
+		}
+		public static IVisNode ScaleDown(IVisNode thso) {
+			var ths = (TowerGridN)thso;
+			var n = (TowerGridN)ths.DeepCopyNoData();
+			--n.GridScale;
+			if (n.GridScale <= 0) return null;
+			n.Cost += ths.TCostCons[0];
+			n.Data = n.DataReal.ScaleGrid(n.GridScale);
+			return n;
+		}
+		public TowerGridN() {
+			Name = "TowerGridN";
+			DataReal = new int[1,1] {{255}};
+			GridScale = 1;
+			Data = DataReal.ScaleGrid(GridScale);
+			MaxCost = 100000;
+			TCostCons = new int[] {1};
+			Transforms = new VisTrans[] {
+				ExpandX,
+				ExpandY,
+				ContractX,
+				ContractY,
+				ScaleUp,
+				ScaleDown,
 			};
 		}
 	}

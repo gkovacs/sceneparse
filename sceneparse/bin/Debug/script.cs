@@ -1,6 +1,6 @@
 LoadAssembly("sceneparse.exe");
 using sceneparse;
 
-var x = new int[] {2,4,6,8,10};
-x.MinInsertIncreasing(13);
-Console.WriteLine(x.MkString());
+var x = new int[,] {{1}};
+//x.MinInsertIncreasing(13);
+Console.WriteLine(x.ScaleGrid(1).MkString());

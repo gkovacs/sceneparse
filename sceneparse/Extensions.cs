@@ -311,6 +311,16 @@ namespace sceneparse
 			}
 		}
 		
+		public static T[,] ScaleGrid<T>(this T[,] v, int slev) {
+			T[,] o = new T[(v.Width()-1)*slev+1, (v.Height()-1)*slev+1];
+			for (int y = 0; y < v.Height(); ++y) {
+				for (int x = 0; x < v.Width(); ++x) {
+					o[x*slev,y*slev] = v[x,y];
+				}
+			}
+			return o;
+		}
+		
 		public static string MkString<T>(this IEnumerable<T> v) {
 			string o = "{ ";
 			foreach (var x in v) {

@@ -23,7 +23,6 @@ using System;
 using System.IO;
 using System.Drawing;
 using System.Collections.Generic;
-using System.Xml.Serialization;
 
 namespace sceneparse
 {
@@ -728,35 +727,13 @@ namespace sceneparse
 			return string.Copy(n);
 		}
 		
-		public static void SerializeArrays(this IVisNode n) {
-			n.SerWidth = n.Data.Width();
-			n.SerHeight = n.Data.Height();
-			n.SerData = new int[n.SerWidth*n.SerHeight];
-			for (int y = 0; y < n.SerHeight; ++y) {
-				for (int x = 0; x < n.SerWidth; ++x) {
-					n.SerData[x+y*n.SerWidth] = n.Data[x,y];
-				}
-			}
-		}
-		
-		public static void DeSerializeArrays(this IVisNode n) {
-			n.Data = new int[n.SerWidth,n.SerHeight];
-			for (int y = 0; y < n.SerHeight; ++y) {
-				for (int x = 0; x < n.SerWidth; ++x) {
-					n.Data[x,y] = n.SerData[x+y*n.SerWidth];
-				}
-			}
-		}
-		
 		public static void SerializeToFile(this IVisNode n, string fn) {
 			var nfn = fn.DeepCopy();
 			if (!nfn.Contains(".xml")) nfn += ".xml";
-			XmlSerializer x = new XmlSerializer(n.GetType());
+			var x = new Polenter.Serialization.SharpSerializer();
 			FileStream fs = new FileStream(nfn, FileMode.Create);
-			n.SerializeArrays();
 			x.Serialize(fs, n);
 			fs.Close();
-			n.SerData = null;
 		}
 				
 		public static Bitmap ToBitmap(this int[,] b1) {

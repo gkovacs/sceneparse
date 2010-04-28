@@ -41,7 +41,10 @@
       <SpecificVersion>False</SpecificVersion>
       <HintPath>..\C5.dll</HintPath>
     </Reference>
-    <Reference Include="System.Xml" />
+    <Reference Include="Polenter.SharpSerializer, Version=1.0.0.0, Culture=neutral, PublicKeyToken=8f4f20011571ee5f">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>..\Polenter.SharpSerializer.dll</HintPath>
+    </Reference>
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Main.cs" />

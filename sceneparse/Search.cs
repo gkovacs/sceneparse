@@ -23,7 +23,6 @@ using System;
 using System.IO;
 using System.Drawing;
 using System.Collections.Generic;
-using System.Xml.Serialization;
 
 namespace sceneparse
 {

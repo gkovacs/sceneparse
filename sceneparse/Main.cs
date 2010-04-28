@@ -23,23 +23,16 @@ using System;
 using System.IO;
 using System.Drawing;
 using System.Collections.Generic;
-using System.Xml.Serialization;
 
 namespace sceneparse
 {
 	public class MainClass {
-		
-		public static IVisNode DeSerializeFromFile(string fn, string typen) {
-			return DeSerializeFromFile(fn, Type.GetType(typen));
-		}
-		
-		public static IVisNode DeSerializeFromFile(string fn, System.Type typen) {
-			XmlSerializer x = new XmlSerializer(typen);
+		public static IVisNode DeSerializeFromFile(string fn) {
+			var x = new Polenter.Serialization.SharpSerializer();
+			//XmlSerializer x = new XmlSerializer(typen);
 			FileStream fs = new FileStream(fn, FileMode.Open);
 			var n = (IVisNode)x.Deserialize(fs);
 			fs.Close();
-			n.DeSerializeArrays();
-			n.SerData = null;
 			return n;
 		}
 		
@@ -339,7 +332,7 @@ namespace sceneparse
 						var fil = diri.GetFiles("*.xml");
 						genos = new IVisNode[fil.Length];
 						for (int i = 0; i < fil.Length; ++i) {
-							genos[i] = DeSerializeFromFile(fil[i].FullName, nv);
+							genos[i] = DeSerializeFromFile(fil[i].FullName);
 						}
 					}},
 				{"g|gen=", "object {TYPE} to generate", (string v) => {

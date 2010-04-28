@@ -23,7 +23,6 @@ using System;
 using System.IO;
 using System.Drawing;
 using System.Collections.Generic;
-using System.Xml.Serialization;
 
 namespace sceneparse
 {
@@ -87,9 +86,6 @@ namespace sceneparse
 		double HeuvCost {get;}
 		int MaxCost {get; set;}
 		int[,] Data {get; set;}
-		int[] SerData {get; set;}
-		int SerWidth {get; set;}
-		int SerHeight {get; set;}
 		VisTrans[] Transforms {get; set;}
 		VisTransMulti[] TransformsMulti {get; set;}
 		//VisTransCost[] TCosts {get; set;}
@@ -118,18 +114,17 @@ namespace sceneparse
 			}}
 		public double HeuvCost {get {return Cost/10000.0 + Heuv;} }
 		public int MaxCost {get; set;}
-		[XmlIgnore] public int[,] Data {get; set;}
-		[XmlIgnore] public VisTrans[] Transforms {get; set;}
+		public int[,] Data {get; set;}
+		[Polenter.Serialization.ExcludeFromSerializationAttribute]
+		public VisTrans[] Transforms {get; set;}
 		protected VisTransMulti[] _TransformsMulti = new VisTransMulti[0];
-		[XmlIgnore] public VisTransMulti[] TransformsMulti {
+		[Polenter.Serialization.ExcludeFromSerializationAttribute]
+		public VisTransMulti[] TransformsMulti {
 			get {
 				return _TransformsMulti;
 			} set {
 				_TransformsMulti = value;
 			}}
-		public int[] SerData {get; set;}
-		public int SerWidth {get; set;}
-		public int SerHeight {get; set;}
 		//public VisTransCost[] TCosts {get; set;}
 		public int[] TCostCons {get; set;}
 		public int StartX {get; set;}
@@ -269,7 +264,7 @@ namespace sceneparse
 	}
 	
 	public class TowerN : BaseVisNode {
-		public int GrowDirection = 0;
+		public int GrowDirection {get; set;}
 		// 0 = undecided
 		// 1 = up/down
 		// 2 = left/right
@@ -309,6 +304,7 @@ namespace sceneparse
 			Name = "TowerN";
 			Data = new int[1,1] {{255}};
 			MaxCost = 100000;
+			GrowDirection = 0;
 			TCostCons = new int[] {1};
 			Transforms = new VisTrans[] {
 				ExpandX,
@@ -320,9 +316,9 @@ namespace sceneparse
 	}
 	
 	public class TowerGridN : BaseVisNode {
-		[XmlIgnore] public int[,] DataReal;
-		public int GridScale = 0;
-		public int GrowDirection = 0;
+		public int[,] DataReal {get; set;}
+		public int GridScale {get; set;}
+		public int GrowDirection {get; set;}
 		// 0 = undecided
 		// 1 = up/down
 		// 2 = left/right
@@ -391,6 +387,7 @@ namespace sceneparse
 			Name = "TowerGridN";
 			DataReal = new int[1,1] {{255}};
 			GridScale = 1;
+			GrowDirection = 0;
 			Data = DataReal.ScaleGrid(GridScale);
 			MaxCost = 100000;
 			TCostCons = new int[] {1};

@@ -219,6 +219,61 @@ namespace sceneparse
 		}
 	}
 	
+	public class SquareGridN : BaseVisNode {
+		public int[,] DataReal {get; set;}
+		public int GridScale {get; set;}
+		public static IVisNode Expand(IVisNode thso) {
+			var ths = (SquareGridN)thso;
+			var n = (SquareGridN)ths.DeepCopyNoData();
+			n.DataReal = ths.DataReal.AddRightColumn().AddBottomRow();
+			n.DataReal.SetRow(n.DataReal.LastY(), 255);
+			n.DataReal.SetColumn(n.DataReal.LastX(), 255);
+			n.Cost += ths.TCostCons[0];
+			n.Data = n.DataReal.ScaleGrid(n.GridScale);
+			return n;
+		}
+		public static IVisNode Contract(IVisNode thso) {
+			var ths = (SquareGridN)thso;
+			var n = (SquareGridN)ths.DeepCopyNoData();
+			n.DataReal = ths.DataReal.SliceXY(0,ths.DataReal.LastX(),0,ths.DataReal.LastY());
+			if (n.DataReal.Width() < 1 || n.DataReal.Height() < 1) return null;
+			n.Cost += ths.TCostCons[0];
+			n.Data = n.DataReal.ScaleGrid(n.GridScale);
+			return n;
+		}
+		public static IVisNode ScaleUp(IVisNode thso) {
+			var ths = (SquareGridN)thso;
+			var n = (SquareGridN)ths.DeepCopyNoData();
+			++n.GridScale;
+			n.Cost += ths.TCostCons[0];
+			n.Data = n.DataReal.ScaleGrid(n.GridScale);
+			return n;
+		}
+		public static IVisNode ScaleDown(IVisNode thso) {
+			var ths = (SquareGridN)thso;
+			var n = (SquareGridN)ths.DeepCopyNoData();
+			--n.GridScale;
+			if (n.GridScale <= 0) return null;
+			n.Cost += ths.TCostCons[0];
+			n.Data = n.DataReal.ScaleGrid(n.GridScale);
+			return n;
+		}
+		public SquareGridN() {
+			Name = "SquareGridN";
+			DataReal = new int[3,3] {{255,255,255},{255,255,255},{255,255,255}};
+			GridScale = 1;
+			Data = DataReal.ScaleGrid(GridScale);
+			MaxCost = 100000;
+			TCostCons = new int[] {1,1};
+			Transforms = new VisTrans[] {
+				Expand,
+				Contract,
+				ScaleUp,
+				ScaleDown,
+			};
+		}
+	}
+	
 	public class RectangleN : BaseVisNode {
 		public static IVisNode ExpandX(IVisNode ths) {
 			var n = ths.DeepCopyNoData();
@@ -321,7 +376,7 @@ namespace sceneparse
 		}
 		public RectangleGridN() {
 			Name = "RectangleGridN";
-			DataReal = new int[1,1] {{255}};
+			DataReal = new int[2,3] {{255,255,255},{255,255,255}};
 			GridScale = 1;
 			Data = DataReal.ScaleGrid(GridScale);
 			MaxCost = 100000;

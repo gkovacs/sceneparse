@@ -100,6 +100,11 @@ namespace sceneparse
 		int[] CachedYCoords {get; set;}
 	}
 	
+	public interface IGridVisNode : IVisNode {
+		int[,] DataReal {get; set;}
+		int GridScale {get; set;}
+	}
+	
 	public abstract class BaseVisNode : IVisNode {
 		public int Width {get {return this.Data.Width();} }
 		public int Height {get {return this.Data.Height();} }
@@ -191,6 +196,28 @@ namespace sceneparse
 		}
 	}
 	
+	public abstract class BaseGridVisNode : BaseVisNode, IGridVisNode {
+		public int[,] DataReal {get; set;}
+		public int GridScale {get; set;}
+		public static IVisNode ScaleUp(IVisNode thso) {
+			var ths = (IGridVisNode)thso;
+			var n = (IGridVisNode)ths.DeepCopyNoData();
+			++n.GridScale;
+			n.Cost += ths.TCostCons[0];
+			n.Data = n.DataReal.ScaleGrid(n.GridScale);
+			return n;
+		}
+		public static IVisNode ScaleDown(IVisNode thso) {
+			var ths = (IGridVisNode)thso;
+			var n = (IGridVisNode)ths.DeepCopyNoData();
+			--n.GridScale;
+			if (n.GridScale <= 0) return null;
+			n.Cost += ths.TCostCons[0];
+			n.Data = n.DataReal.ScaleGrid(n.GridScale);
+			return n;
+		}
+	}
+	
 	public class SquareN : BaseVisNode {
 		public static IVisNode Expand(IVisNode ths) {
 			var n = ths.DeepCopyNoData();
@@ -219,12 +246,10 @@ namespace sceneparse
 		}
 	}
 	
-	public class SquareGridN : BaseVisNode {
-		public int[,] DataReal {get; set;}
-		public int GridScale {get; set;}
+	public class SquareGridN : BaseGridVisNode {
 		public static IVisNode Expand(IVisNode thso) {
-			var ths = (SquareGridN)thso;
-			var n = (SquareGridN)ths.DeepCopyNoData();
+			var ths = (IGridVisNode)thso;
+			var n = (IGridVisNode)ths.DeepCopyNoData();
 			n.DataReal = ths.DataReal.AddRightColumn().AddBottomRow();
 			n.DataReal.SetRow(n.DataReal.LastY(), 255);
 			n.DataReal.SetColumn(n.DataReal.LastX(), 255);
@@ -233,27 +258,10 @@ namespace sceneparse
 			return n;
 		}
 		public static IVisNode Contract(IVisNode thso) {
-			var ths = (SquareGridN)thso;
-			var n = (SquareGridN)ths.DeepCopyNoData();
+			var ths = (IGridVisNode)thso;
+			var n = (IGridVisNode)ths.DeepCopyNoData();
 			n.DataReal = ths.DataReal.SliceXY(0,ths.DataReal.LastX(),0,ths.DataReal.LastY());
 			if (n.DataReal.Width() < 1 || n.DataReal.Height() < 1) return null;
-			n.Cost += ths.TCostCons[0];
-			n.Data = n.DataReal.ScaleGrid(n.GridScale);
-			return n;
-		}
-		public static IVisNode ScaleUp(IVisNode thso) {
-			var ths = (SquareGridN)thso;
-			var n = (SquareGridN)ths.DeepCopyNoData();
-			++n.GridScale;
-			n.Cost += ths.TCostCons[0];
-			n.Data = n.DataReal.ScaleGrid(n.GridScale);
-			return n;
-		}
-		public static IVisNode ScaleDown(IVisNode thso) {
-			var ths = (SquareGridN)thso;
-			var n = (SquareGridN)ths.DeepCopyNoData();
-			--n.GridScale;
-			if (n.GridScale <= 0) return null;
 			n.Cost += ths.TCostCons[0];
 			n.Data = n.DataReal.ScaleGrid(n.GridScale);
 			return n;
@@ -318,12 +326,10 @@ namespace sceneparse
 		}
 	}
 	
-	public class RectangleGridN : BaseVisNode {
-		public int[,] DataReal {get; set;}
-		public int GridScale {get; set;}
+	public class RectangleGridN : BaseGridVisNode {
 		public static IVisNode ExpandX(IVisNode thso) {
-			var ths = (RectangleGridN)thso;
-			var n = (RectangleGridN)ths.DeepCopyNoData();
+			var ths = (IGridVisNode)thso;
+			var n = (IGridVisNode)ths.DeepCopyNoData();
 			n.DataReal = ths.DataReal.AddRightColumn();
 			n.DataReal.SetColumn(n.DataReal.LastX(), 255);
 			n.Cost += ths.TCostCons[0];
@@ -331,8 +337,8 @@ namespace sceneparse
 			return n;
 		}
 		public static IVisNode ExpandY(IVisNode thso) {
-			var ths = (RectangleGridN)thso;
-			var n = (RectangleGridN)ths.DeepCopyNoData();
+			var ths = (IGridVisNode)thso;
+			var n = (IGridVisNode)ths.DeepCopyNoData();
 			n.DataReal = ths.DataReal.AddBottomRow();
 			n.DataReal.SetRow(n.DataReal.LastY(), 255);
 			n.Cost += ths.TCostCons[0];
@@ -340,8 +346,8 @@ namespace sceneparse
 			return n;
 		}
 		public static IVisNode ContractX(IVisNode thso) {
-			var ths = (RectangleGridN)thso;
-			var n = (RectangleGridN)ths.DeepCopyNoData();
+			var ths = (IGridVisNode)thso;
+			var n = (IGridVisNode)ths.DeepCopyNoData();
 			n.DataReal = ths.DataReal.SliceX(0,ths.DataReal.LastX());
 			n.Cost += ths.TCostCons[0];
 			if (n.DataReal.Width() < 1 || n.DataReal.Height() < 1) return null;
@@ -349,28 +355,11 @@ namespace sceneparse
 			return n;
 		}
 		public static IVisNode ContractY(IVisNode thso) {
-			var ths = (RectangleGridN)thso;
-			var n = (RectangleGridN)ths.DeepCopyNoData();
+			var ths = (IGridVisNode)thso;
+			var n = (IGridVisNode)ths.DeepCopyNoData();
 			n.DataReal = ths.DataReal.SliceY(0,ths.DataReal.LastY());
 			n.Cost += ths.TCostCons[0];
 			if (n.DataReal.Width() < 1 || n.DataReal.Height() < 1) return null;
-			n.Data = n.DataReal.ScaleGrid(n.GridScale);
-			return n;
-		}
-		public static IVisNode ScaleUp(IVisNode thso) {
-			var ths = (RectangleGridN)thso;
-			var n = (RectangleGridN)ths.DeepCopyNoData();
-			++n.GridScale;
-			n.Cost += ths.TCostCons[0];
-			n.Data = n.DataReal.ScaleGrid(n.GridScale);
-			return n;
-		}
-		public static IVisNode ScaleDown(IVisNode thso) {
-			var ths = (RectangleGridN)thso;
-			var n = (RectangleGridN)ths.DeepCopyNoData();
-			--n.GridScale;
-			if (n.GridScale <= 0) return null;
-			n.Cost += ths.TCostCons[0];
 			n.Data = n.DataReal.ScaleGrid(n.GridScale);
 			return n;
 		}
@@ -444,9 +433,7 @@ namespace sceneparse
 		}
 	}
 	
-	public class TowerGridN : BaseVisNode {
-		public int[,] DataReal {get; set;}
-		public int GridScale {get; set;}
+	public class TowerGridN : BaseGridVisNode {
 		public int GrowDirection {get; set;}
 		// 0 = undecided
 		// 1 = up/down
@@ -492,23 +479,6 @@ namespace sceneparse
 			if (n.DataReal.Width() < 1 || n.DataReal.Height() < 1) return null;
 			if (ths.GrowDirection == 1) return null;
 			else if (ths.GrowDirection == 0) n.GrowDirection = 2;
-			n.Data = n.DataReal.ScaleGrid(n.GridScale);
-			return n;
-		}
-		public static IVisNode ScaleUp(IVisNode thso) {
-			var ths = (TowerGridN)thso;
-			var n = (TowerGridN)ths.DeepCopyNoData();
-			++n.GridScale;
-			n.Cost += ths.TCostCons[0];
-			n.Data = n.DataReal.ScaleGrid(n.GridScale);
-			return n;
-		}
-		public static IVisNode ScaleDown(IVisNode thso) {
-			var ths = (TowerGridN)thso;
-			var n = (TowerGridN)ths.DeepCopyNoData();
-			--n.GridScale;
-			if (n.GridScale <= 0) return null;
-			n.Cost += ths.TCostCons[0];
 			n.Data = n.DataReal.ScaleGrid(n.GridScale);
 			return n;
 		}

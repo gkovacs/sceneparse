@@ -502,9 +502,11 @@ namespace sceneparse
 	}
 	
 	public class ChainN : BaseVisNode {
-		public int headx;
-		public int heady;
-		public static IVisNode ExpandRight(IVisNode thso) {
+		public int headx {get; set;}
+		public int heady {get; set;}
+		public int tailx {get; set;}
+		public int taily {get; set;}
+		public static IVisNode ExpandRightHead(IVisNode thso) {
 			var ths = (ChainN)thso;
 			var n = (ChainN)ths.DeepCopyNoData();
 			if (n.headx == ths.Data.LastX()) {
@@ -517,7 +519,7 @@ namespace sceneparse
 			n.Cost += ths.TCostCons[0];
 			return n;
 		}
-		public static IVisNode ExpandLeft(IVisNode thso) {
+		public static IVisNode ExpandLeftHead(IVisNode thso) {
 			var ths = (ChainN)thso;
 			var n = (ChainN)ths.DeepCopyNoData();
 			if (n.headx == 0) {
@@ -530,7 +532,7 @@ namespace sceneparse
 			n.Cost += ths.TCostCons[0];
 			return n;
 		}
-		public static IVisNode ExpandDown(IVisNode thso) {
+		public static IVisNode ExpandDownHead(IVisNode thso) {
 			var ths = (ChainN)thso;
 			var n = (ChainN)ths.DeepCopyNoData();
 			if (n.heady == ths.Data.LastY()) {
@@ -543,7 +545,7 @@ namespace sceneparse
 			n.Cost += ths.TCostCons[0];
 			return n;
 		}
-		public static IVisNode ExpandUp(IVisNode thso) {
+		public static IVisNode ExpandUpHead(IVisNode thso) {
 			var ths = (ChainN)thso;
 			var n = (ChainN)ths.DeepCopyNoData();
 			if (n.heady == 0) {
@@ -566,13 +568,13 @@ namespace sceneparse
 						if (ths.headx < 0 || ths.headx >= ths.Data.Width() || ths.heady < 0 || ths.heady >= ths.Data.Height()) continue;
 						ths.headx = x;
 						ths.heady = y;
-						var n = ExpandLeft(ths);
+						var n = ExpandLeftHead(ths);
 						if (n != null) retv.AddLast(n);
-						n = ExpandRight(ths);
+						n = ExpandRightHead(ths);
 						if (n != null) retv.AddLast(n);
-						n = ExpandUp(ths);
+						n = ExpandUpHead(ths);
 						if (n != null) retv.AddLast(n);
-						n = ExpandDown(ths);
+						n = ExpandDownHead(ths);
 						if (n != null) retv.AddLast(n);
 					}
 				}
@@ -591,7 +593,11 @@ namespace sceneparse
 						n.Data = ths.Data.DeepCopy();
 						n.Data[x,y] = 0;
 						if (n.headx == x && n.heady == y) {
-							n.Data.HasSingleNeighbor(x, y, ref n.headx, ref n.heady);
+							int tx = 0;
+							int ty = 0;
+							n.Data.HasSingleNeighbor(x, y, ref tx, ref ty);
+							n.headx = tx;
+							n.heady = ty;
 							if (n.headx < 0 || n.headx >= n.Data.Width() || n.heady < 0 || n.heady >= n.Data.Height()) continue;
 						}
 						if (x == 0 && n.Data.ColumnEquals(0, 0)) {
@@ -630,10 +636,14 @@ namespace sceneparse
 			MaxCost = 100000;
 			TCostCons = new int[] {1,1,1,1};
 			Transforms = new VisTrans[] {
-				//ExpandRight,
-				//ExpandLeft,
-				//ExpandDown,
-				//ExpandUp,
+				//ExpandRightHead,
+				//ExpandLeftHead,
+				//ExpandDownHead,
+				//ExpandUpHead,
+				//ExpandRightTail,
+				//ExpandLeftTail,
+				//ExpandDownTail,
+				//ExpandUpTail,
 			};
 			TransformsMulti = new VisTransMulti[] {
 				ExpandMulti,

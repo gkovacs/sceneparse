@@ -45,6 +45,7 @@ namespace sceneparse
 		void AddNewRange(IEnumerable<IVisNode> nl);
 		bool Next();
 		void Run();
+		void Reset();
 	}
 	
 	public abstract class BaseSearchAlgorithm : ISearchAlgorithm {
@@ -78,6 +79,12 @@ namespace sceneparse
 		public virtual bool Next() {return false;}
 		public void Run() {
 			while (this.Next()) {};
+		}
+		public void Reset() {
+			while (!Agenda.IsEmpty) {
+				Agenda.DeleteMin();
+			}
+			Visited.Clear();
 		}
 	}
 	

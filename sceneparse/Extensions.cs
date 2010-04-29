@@ -180,7 +180,7 @@ namespace sceneparse
 			return total;
 		}
 		
-		public static int[,] Subtract(this int[,] v, int[,] s) {
+		public static int[,] SubtractMatrix(this int[,] v, int[,] s) {
 			if (v.Width() != s.Width())
 				throw new Exception("width mismatch");
 			if (v.Height() != s.Height())
@@ -190,6 +190,22 @@ namespace sceneparse
 				for (int x = 0; x < v.Width(); ++x) {
 					if (s[x,y] > 0) {
 						o[x,y] = 0;
+					}
+				}
+			}
+			return o;
+		}
+		
+		public static int[,] AddMatrix(this int[,] v, int[,] s) {
+			if (v.Width() != s.Width())
+				throw new Exception("width mismatch");
+			if (v.Height() != s.Height())
+				throw new Exception("height mismatch");
+			var o = v.DeepCopy();
+			for (int y = 0; y < v.Height(); ++y) {
+				for (int x = 0; x < v.Width(); ++x) {
+					if (s[x,y] > 0) {
+						o[x,y] = 255;
 					}
 				}
 			}
@@ -559,6 +575,21 @@ namespace sceneparse
 				hash += hash << 5;
 				return (int)hash;
 			//}
+		}
+		
+		public static T[] AddResize<T>(this T[] v, T n) {
+			var tmpv = new T[v.Length+1];
+			v.CopyTo(tmpv, 0);
+			tmpv[tmpv.Length-1] = n;
+			return tmpv;
+		}
+		
+		public static bool Contains<T>(this T[] v, T n) where T : IEquatable<T> {
+			for (int i = 0; i < v.Length; ++i) {
+				if (n.Equals(v[i]))
+					return true;
+			}
+			return false;
 		}
 		
 		public static T[,] SliceX<T>(this T[,] v, int xs, int xe) {

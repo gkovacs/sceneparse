@@ -442,26 +442,35 @@ namespace sceneparse
 					Console.WriteLine("current heuv is"+cn.Heuv);
 					return false;
 				};
-				search.Lifetime = numiter;
-				search.AddNewRange(genos);
-				search.Run();
-				Console.WriteLine("object type is"+BestNode.Name);
-				Console.WriteLine("object description is"+BestNode.Describe());
-				Console.WriteLine("heuristic value is "+BestNode.Heuv);
-				if (rendertarg != null) {
-					BestNode.Data.CopyMatrix(rendertarg, BestNode.StartX, BestNode.StartY);
-					rendertarg.ToPBM("outresult"+subimgn);
-					//rendertarg.SetRegion(0, BestNode.StartX, BestNode.StartX+BestNode.Data.Width()-1, BestNode.StartY, BestNode.StartY+BestNode.Data.Height()-1);
-				} else {
-					BestNode.Data.ToPBM("outresult"+subimgn);
+				while (true) {
+					search.Lifetime = numiter;
+					search.AddNewRange(genos);
+					search.Run();
+					Console.WriteLine("object type is"+BestNode.Name);
+					Console.WriteLine("object description is"+BestNode.Describe());
+					Console.WriteLine("heuristic value is "+BestNode.Heuv);
+					if (rendertarg != null) {
+						BestNode.Data.CopyMatrix(rendertarg, BestNode.StartX, BestNode.StartY);
+						rendertarg.ToPBM("outresult"+subimgn);
+						//rendertarg.SetRegion(0, BestNode.StartX, BestNode.StartX+BestNode.Data.Width()-1, BestNode.StartY, BestNode.StartY+BestNode.Data.Height()-1);
+					} else {
+						BestNode.Data.ToPBM("outresult"+subimgn);
+					}
+					BestNode.SerializeToFile("outresult"+subimgn);
+					supstruct[BestNode.StartX+BestNode.Width/2, BestNode.StartY+BestNode.Height/2] = 255;
+					supstruct.ToPBM("outresult-sup");
+					fullimg = fullimg.AddMatrix(rendertarg);
+					fullimg.ToPBM("outresult-full");
+					imgc = (IImageComparer)Activator.CreateInstance(Type.GetType(imgcomparer), new object[] {refimg, fullimg});
+					if (!genos.Contains(BestNode))
+						genos = genos.AddResize(BestNode);
+					//rendertarg.SetAll(0);
+					rendertarg.SetRegion(0, BestNode.StartX, BestNode.StartX+BestNode.Data.Width()-1, BestNode.StartY, BestNode.StartY+BestNode.Data.Height()-1);
+					search.Reset();
+					++subimgn;
+					if (search.BestHeu <= 0)
+						break;
 				}
-				BestNode.SerializeToFile("outresult"+subimgn);
-				supstruct[BestNode.StartX+BestNode.Width/2, BestNode.StartY+BestNode.Height/2] = 255;
-				supstruct.ToPBM("outresult-sup");
-				rendertarg.CopyMatrix(fullimg);
-				fullimg.ToPBM("outresult-full");
-				//rendertarg.SetAll(0);
-				rendertarg.SetRegion(0, BestNode.StartX, BestNode.StartX+BestNode.Data.Width()-1, BestNode.StartY, BestNode.StartY+BestNode.Data.Height()-1);
 			}
 			else if (genos != null) {
 				int imgn = 0;

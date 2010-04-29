@@ -412,33 +412,28 @@ namespace sceneparse
 					cn.SerializeToFile("out"+imgn);
 					++imgn;
 				});
+				int BestHeu = int.MaxValue;
+				IVisNode BestNode = null;
 				if (useheuristic) {
-				IImageComparer imgc = (IImageComparer)Activator.CreateInstance(Type.GetType(imgcomparer), new object[] {refimg});
-				search.FlushNodeCache = imgc.FlushNodeCache;
-				search.FullFlushNodeCache = imgc.FullFlushNodeCache;
-				search.NodeHeuristic = (IVisNode cn) => {
-					//return 0; // disable heuristic
-					
-					return imgc.CompareImg(cn);
-				};
-				search.NodeTermination = (IVisNode cn) => {
-					if (cn.Heuv <= 0) {
-						Console.WriteLine("object type is"+cn.Name);
-						Console.WriteLine("object description is"+cn.Describe());
-						Console.WriteLine("heuristic value is "+cn.Heuv);
-						if (rendertarg != null) {
-							rendertarg.CopyMatrix(cn.Data, cn.StartX, cn.StartY);
-							rendertarg.ToPBM("outresult");
-							rendertarg.SetRegion(0, cn.StartX, cn.StartX+cn.Data.Width()-1, cn.StartY, cn.StartY+cn.Data.Height()-1);
-						} else {
-							cn.Data.ToPBM("outresult");
+					IImageComparer imgc = (IImageComparer)Activator.CreateInstance(Type.GetType(imgcomparer), new object[] {refimg});
+					search.FlushNodeCache = imgc.FlushNodeCache;
+					search.FullFlushNodeCache = imgc.FullFlushNodeCache;
+					search.NodeHeuristic = (IVisNode cn) => {
+						//return 0; // disable heuristic
+						
+						return imgc.CompareImg(cn);
+					};
+					search.NodeTermination = (IVisNode cn) => {
+						if (cn.Heuv < BestHeu) {
+							BestHeu = cn.Heuv;
+							BestNode = cn;
 						}
-						cn.SerializeToFile("outresult");
-						return true;
-					}
-					Console.WriteLine("current heuv is"+cn.Heuv);
-					return false;
-				};
+						if (cn.Heuv <= 0) {
+							return true;
+						}
+						Console.WriteLine("current heuv is"+cn.Heuv);
+						return false;
+					};
 				}
 				search.Lifetime = numiter;
 				if (genos != null)
@@ -446,6 +441,19 @@ namespace sceneparse
 				else if (geno != null)
 					search.AddNew(geno);
 				search.Run();
+				if (useheuristic) {
+					Console.WriteLine("object type is"+BestNode.Name);
+					Console.WriteLine("object description is"+BestNode.Describe());
+					Console.WriteLine("heuristic value is "+BestNode.Heuv);
+					if (rendertarg != null) {
+						rendertarg.CopyMatrix(BestNode.Data, BestNode.StartX, BestNode.StartY);
+						rendertarg.ToPBM("outresult");
+						rendertarg.SetRegion(0, BestNode.StartX, BestNode.StartX+BestNode.Data.Width()-1, BestNode.StartY, BestNode.StartY+BestNode.Data.Height()-1);
+					} else {
+						BestNode.Data.ToPBM("outresult");
+					}
+					BestNode.SerializeToFile("outresult");
+				}
 			}
 		}
 	}

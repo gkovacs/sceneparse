@@ -212,6 +212,10 @@ namespace sceneparse
 			return o;
 		}
 		
+		public static void Render(this IRingVisNode v) {
+			v.Data = RingN.Render(v.radius, v.numitems, v.rotation);
+		}
+		
 		public static void Extend<T>(this Queue<T> v, IEnumerable<T> n) {
 			foreach (T x in n) {
 				v.Enqueue(x);

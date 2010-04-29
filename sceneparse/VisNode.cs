@@ -480,19 +480,22 @@ namespace sceneparse
 	public interface IRingVisNode : IVisNode {
 		int numitems {get; set;}
 		int radius {get; set;}
+		double rotation {get; set;}
 	}
 	
 	public class RingN : BaseVisNode, IRingVisNode {
 		public int numitems {get; set;}
 		public int radius {get; set;}
-		public static int[,] Render(int rad, int numi) {
+		public double rotation {get; set;}
+		public static int[,] Render(int rad, int numi, double rotn) {
 			var o = new int[rad*2-1,rad*2-1];
 			double radmh = rad-0.5;
 			double angleincr = 2*Math.PI / numi;
-			double totang = 0.0;
+			double totang = rotn;
 			for (int i = 0; i < numi; ++i) {
 				o[rad-1+(int)(Math.Cos(totang)*radmh), rad-1+(int)(Math.Sin(totang)*radmh)] = 255;
 				totang += angleincr;
+				totang %= 2*Math.PI;
 			}
 			return o;
 		}
@@ -501,15 +504,7 @@ namespace sceneparse
 			var n = (IRingVisNode)ths.DeepCopyNoData();
 			++n.numitems;
 			n.Cost += ths.TCostCons[0];
-			n.Data = Render(n.radius, n.numitems);
-			return n;
-		}
-		public static IVisNode DoubleItems(IVisNode thso) {
-			var ths = (IRingVisNode)thso;
-			var n = (IRingVisNode)ths.DeepCopyNoData();
-			n.numitems *= 2;
-			n.Cost += ths.TCostCons[0];
-			n.Data = Render(n.radius, n.numitems);
+			n.Render();
 			return n;
 		}
 		public static IVisNode RmItem(IVisNode thso) {
@@ -518,7 +513,15 @@ namespace sceneparse
 			--n.numitems;
 			if (n.numitems == 0) return null;
 			n.Cost += ths.TCostCons[0];
-			n.Data = Render(n.radius, n.numitems);
+			n.Render();
+			return n;
+		}
+		public static IVisNode DoubleItems(IVisNode thso) {
+			var ths = (IRingVisNode)thso;
+			var n = (IRingVisNode)ths.DeepCopyNoData();
+			n.numitems *= 2;
+			n.Cost += ths.TCostCons[0];
+			n.Render();
 			return n;
 		}
 		public static IVisNode HalveItems(IVisNode thso) {
@@ -527,7 +530,7 @@ namespace sceneparse
 			var n = (IRingVisNode)ths.DeepCopyNoData();
 			n.numitems /= 2;
 			n.Cost += ths.TCostCons[0];
-			n.Data = Render(n.radius, n.numitems);
+			n.Render();
 			return n;
 		}
 		public static IVisNode ExpandRadius(IVisNode thso) {
@@ -535,7 +538,7 @@ namespace sceneparse
 			var n = (IRingVisNode)ths.DeepCopyNoData();
 			++n.radius;
 			n.Cost += ths.TCostCons[0];
-			n.Data = Render(n.radius, n.numitems);
+			n.Render();
 			return n;
 		}
 		public static IVisNode ContractRadius(IVisNode thso) {
@@ -544,7 +547,25 @@ namespace sceneparse
 			--n.radius;
 			if (n.radius == 0) return null;
 			n.Cost += ths.TCostCons[0];
-			n.Data = Render(n.radius, n.numitems);
+			n.Render();
+			return n;
+		}
+		public static IVisNode RotateUp(IVisNode thso) {
+			var ths = (IRingVisNode)thso;
+			var n = (IRingVisNode)ths.DeepCopyNoData();
+			n.rotation += Math.Asin(1.0/n.radius);
+			n.rotation %= 2*Math.PI / n.numitems;
+			n.Cost += ths.TCostCons[0];
+			n.Render();
+			return n;
+		}
+		public static IVisNode RotateDown(IVisNode thso) {
+			var ths = (IRingVisNode)thso;
+			var n = (IRingVisNode)ths.DeepCopyNoData();
+			n.rotation -= Math.Asin(1.0/n.radius);
+			n.rotation %= 2*Math.PI / n.numitems;
+			n.Cost += ths.TCostCons[0];
+			n.Render();
 			return n;
 		}
 		public override string Describe()
@@ -555,7 +576,7 @@ namespace sceneparse
 			Name = "RingN";
 			radius = 3;
 			numitems = 3;
-			Data = Render(radius, numitems);
+			this.Render();
 			MaxCost = 100000;
 			TCostCons = new int[] {1,1,1,1};
 			Transforms = new VisTrans[] {
@@ -565,6 +586,8 @@ namespace sceneparse
 				ContractRadius,
 				DoubleItems,
 				HalveItems,
+				//RotateUp,
+				//RotateDown,
 			};
 		}
 	}

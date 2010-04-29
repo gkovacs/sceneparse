@@ -477,6 +477,75 @@ namespace sceneparse
 		}
 	}
 	
+	public interface IRingVisNode : IVisNode {
+		int numitems {get; set;}
+		int radius {get; set;}
+	}
+	
+	public class RingN : BaseVisNode, IRingVisNode {
+		public int numitems {get; set;}
+		public int radius {get; set;}
+		public static int[,] Render(int rad, int numi) {
+			var o = new int[rad*2-1,rad*2-1];
+			double radmh = rad-0.5;
+			double angleincr = 2*Math.PI / numi;
+			double totang = 0.0;
+			for (int i = 0; i < numi; ++i) {
+				o[rad-1+(int)(Math.Cos(totang)*radmh), rad-1+(int)(Math.Sin(totang)*radmh)] = 255;
+				totang += angleincr;
+			}
+			return o;
+		}
+		public static IVisNode AddItem(IVisNode thso) {
+			var ths = (IRingVisNode)thso;
+			var n = (IRingVisNode)ths.DeepCopyNoData();
+			++n.numitems;
+			n.Cost += ths.TCostCons[0];
+			n.Data = Render(n.radius, n.numitems);
+			return n;
+		}
+		public static IVisNode RmItem(IVisNode thso) {
+			var ths = (IRingVisNode)thso;
+			var n = (IRingVisNode)ths.DeepCopyNoData();
+			--n.numitems;
+			if (n.numitems == 0) return null;
+			n.Cost += ths.TCostCons[0];
+			n.Data = Render(n.radius, n.numitems);
+			return n;
+		}
+		public static IVisNode ExpandRadius(IVisNode thso) {
+			var ths = (IRingVisNode)thso;
+			var n = (IRingVisNode)ths.DeepCopyNoData();
+			++n.radius;
+			n.Cost += ths.TCostCons[0];
+			n.Data = Render(n.radius, n.numitems);
+			return n;
+		}
+		public static IVisNode ContractRadius(IVisNode thso) {
+			var ths = (IRingVisNode)thso;
+			var n = (IRingVisNode)ths.DeepCopyNoData();
+			--n.radius;
+			if (n.radius == 0) return null;
+			n.Cost += ths.TCostCons[0];
+			n.Data = Render(n.radius, n.numitems);
+			return n;
+		}
+		public RingN() {
+			Name = "RingN";
+			radius = 3;
+			numitems = 3;
+			Data = Render(radius, numitems);
+			MaxCost = 100000;
+			TCostCons = new int[] {1,1,1,1};
+			Transforms = new VisTrans[] {
+				AddItem,
+				RmItem,
+				ExpandRadius,
+				ContractRadius,
+			};
+		}
+	}
+	
 	public interface IChainVisNode : IVisNode {
 		int headx {get; set;}
 		int heady {get; set;}

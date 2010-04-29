@@ -477,71 +477,78 @@ namespace sceneparse
 		}
 	}
 	
-	public class ChainN : BaseVisNode {
+	public interface IChainVisNode : IVisNode {
+		int headx {get; set;}
+		int heady {get; set;}
+		int tailx {get; set;}
+		int taily {get; set;}
+	}
+	
+	public class ChainN : BaseVisNode, IChainVisNode {
 		public int headx {get; set;}
 		public int heady {get; set;}
 		public int tailx {get; set;}
 		public int taily {get; set;}
 		public static IVisNode ExpandRightHead(IVisNode thso) {
-			var ths = (ChainN)thso;
-			var n = (ChainN)ths.DeepCopyNoData();
-			if (n.headx == ths.Data.LastX()) {
-				n.Data = ths.Data.AddRightColumn();
+			var ths = (IChainVisNode)thso;
+			var n = (IChainVisNode)ths.DeepCopyNoData();
+			if (n.headx == ths.DataReal.LastX()) {
+				n.DataReal = ths.DataReal.AddRightColumn();
 			} else {
-				n.Data = ths.Data.DeepCopy();
+				n.DataReal = ths.DataReal.DeepCopy();
 			}
 			++n.headx;
-			n.Data[n.headx, n.heady] = 255;
+			n.DataReal[n.headx, n.heady] = 255;
 			n.Cost += ths.TCostCons[0];
 			return n;
 		}
 		public static IVisNode ExpandLeftHead(IVisNode thso) {
-			var ths = (ChainN)thso;
-			var n = (ChainN)ths.DeepCopyNoData();
+			var ths = (IChainVisNode)thso;
+			var n = (IChainVisNode)ths.DeepCopyNoData();
 			if (n.headx == 0) {
-				n.Data = ths.Data.AddLeftColumn();
+				n.DataReal = ths.DataReal.AddLeftColumn();
 			} else {
-				n.Data = ths.Data.DeepCopy();
+				n.DataReal = ths.DataReal.DeepCopy();
 				--n.headx;
 			}
-			n.Data[n.headx, n.heady] = 255;
+			n.DataReal[n.headx, n.heady] = 255;
 			n.Cost += ths.TCostCons[0];
 			return n;
 		}
 		public static IVisNode ExpandDownHead(IVisNode thso) {
-			var ths = (ChainN)thso;
-			var n = (ChainN)ths.DeepCopyNoData();
-			if (n.heady == ths.Data.LastY()) {
-				n.Data = ths.Data.AddBottomRow();
+			var ths = (IChainVisNode)thso;
+			var n = (IChainVisNode)ths.DeepCopyNoData();
+			if (n.heady == ths.DataReal.LastY()) {
+				n.DataReal = ths.DataReal.AddBottomRow();
 			} else {
-				n.Data = ths.Data.DeepCopy();
+				n.DataReal = ths.DataReal.DeepCopy();
 			}
 			++n.heady;
-			n.Data[n.headx, n.heady] = 255;
+			n.DataReal[n.headx, n.heady] = 255;
 			n.Cost += ths.TCostCons[0];
 			return n;
 		}
 		public static IVisNode ExpandUpHead(IVisNode thso) {
-			var ths = (ChainN)thso;
-			var n = (ChainN)ths.DeepCopyNoData();
+			var ths = (IChainVisNode)thso;
+			var n = (IChainVisNode)ths.DeepCopyNoData();
 			if (n.heady == 0) {
-				n.Data = ths.Data.AddTopRow();
+				n.DataReal = ths.DataReal.AddTopRow();
 			} else {
-				n.Data = ths.Data.DeepCopy();
+				n.DataReal = ths.DataReal.DeepCopy();
 				--n.heady;
 			}
-			n.Data[n.headx, n.heady] = 255;
+			n.DataReal[n.headx, n.heady] = 255;
 			n.Cost += ths.TCostCons[0];
 			return n;
 		}
 		public static IEnumerable<IVisNode> ExpandMulti(IVisNode thso) {
 			LinkedList<IVisNode> retv = new LinkedList<IVisNode>();
-			var ths = (ChainN)thso;
-			for (int y = 0; y < ths.Data.Height(); ++y) {
-				for (int x = 0; x < ths.Data.Width(); ++x) {
-					if ((ths.Data.Width() == 1 && ths.Data.Height() == 1) || (ths.Data[x,y] > 0 && ths.Data.CountNeighbors(x,y) == 1)) {
-						if (ths.Data.Height() <= 0 || ths.Data.Width() <= 0) continue;
-						if (ths.headx < 0 || ths.headx >= ths.Data.Width() || ths.heady < 0 || ths.heady >= ths.Data.Height()) continue;
+			var ths = (IChainVisNode)thso;
+			for (int y = 0; y < ths.DataReal.Height(); ++y) {
+				for (int x = 0; x < ths.DataReal.Width(); ++x) {
+					if ((ths.DataReal.Width() == 1 && ths.DataReal.Height() == 1) || (ths.DataReal[x,y] > 0 && ths.DataReal.CountNeighbors(x,y) == 1)) {
+						if (ths.DataReal.Height() <= 0 || ths.DataReal.Width() <= 0) continue;
+						if (ths.headx < 0 || ths.headx >= ths.DataReal.Width() || ths.heady < 0 || ths.heady >= ths.DataReal.Height()) continue;
 						ths.headx = x;
 						ths.heady = y;
 						var n = ExpandLeftHead(ths);
@@ -559,45 +566,45 @@ namespace sceneparse
 		}
 		public static IEnumerable<IVisNode> ContractMulti(IVisNode thso) {
 			LinkedList<IVisNode> retv = new LinkedList<IVisNode>();
-			var ths = (ChainN)thso;
-			for (int y = 0; y < ths.Data.Height(); ++y) {
-				for (int x = 0; x < ths.Data.Width(); ++x) {
-					if (ths.Data[x,y] > 0 && ths.Data.CountNeighbors(x,y) == 1) {
-						if (ths.Data.Height() <= 0 || ths.Data.Width() <= 0) continue;
-						if (ths.headx < 0 || ths.headx >= ths.Data.Width() || ths.heady < 0 || ths.heady >= ths.Data.Height()) continue;
-						var n = (ChainN)ths.DeepCopyNoData();
-						n.Data = ths.Data.DeepCopy();
-						n.Data[x,y] = 0;
+			var ths = (IChainVisNode)thso;
+			for (int y = 0; y < ths.DataReal.Height(); ++y) {
+				for (int x = 0; x < ths.DataReal.Width(); ++x) {
+					if (ths.DataReal[x,y] > 0 && ths.DataReal.CountNeighbors(x,y) == 1) {
+						if (ths.DataReal.Height() <= 0 || ths.DataReal.Width() <= 0) continue;
+						if (ths.headx < 0 || ths.headx >= ths.DataReal.Width() || ths.heady < 0 || ths.heady >= ths.DataReal.Height()) continue;
+						var n = (IChainVisNode)ths.DeepCopyNoData();
+						n.DataReal = ths.DataReal.DeepCopy();
+						n.DataReal[x,y] = 0;
 						if (n.headx == x && n.heady == y) {
 							int tx = 0;
 							int ty = 0;
-							n.Data.HasSingleNeighbor(x, y, ref tx, ref ty);
+							n.DataReal.HasSingleNeighbor(x, y, ref tx, ref ty);
 							n.headx = tx;
 							n.heady = ty;
-							if (n.headx < 0 || n.headx >= n.Data.Width() || n.heady < 0 || n.heady >= n.Data.Height()) continue;
+							if (n.headx < 0 || n.headx >= n.DataReal.Width() || n.heady < 0 || n.heady >= n.DataReal.Height()) continue;
 						}
-						if (x == 0 && n.Data.ColumnEquals(0, 0)) {
-							n.Data = n.Data.SliceX(1, n.Data.Width());
+						if (x == 0 && n.DataReal.ColumnEquals(0, 0)) {
+							n.DataReal = n.DataReal.SliceX(1, n.DataReal.Width());
 							--n.headx;
-							if (n.headx < 0 || n.headx >= n.Data.Width() || n.heady < 0 || n.heady >= n.Data.Height()) continue;
-							if (n.Data.Height() <= 0 || n.Data.Width() <= 0) continue;
+							if (n.headx < 0 || n.headx >= n.DataReal.Width() || n.heady < 0 || n.heady >= n.DataReal.Height()) continue;
+							if (n.DataReal.Height() <= 0 || n.DataReal.Width() <= 0) continue;
 							
 						}
-						if (y == 0 && n.Data.RowEquals(0, 0)) {
-							n.Data = n.Data.SliceY(1, n.Data.Height());
+						if (y == 0 && n.DataReal.RowEquals(0, 0)) {
+							n.DataReal = n.DataReal.SliceY(1, n.DataReal.Height());
 							--n.heady;
-							if (n.headx < 0 || n.headx >= n.Data.Width() || n.heady < 0 || n.heady >= n.Data.Height()) continue;
-							if (n.Data.Height() <= 0 || n.Data.Width() <= 0) continue;
+							if (n.headx < 0 || n.headx >= n.DataReal.Width() || n.heady < 0 || n.heady >= n.DataReal.Height()) continue;
+							if (n.DataReal.Height() <= 0 || n.DataReal.Width() <= 0) continue;
 						}
-						if (x == n.Data.LastX() && n.Data.ColumnEquals(n.Data.LastX(), 0)) {
-							n.Data = n.Data.SliceX(0, n.Data.LastX());
-							if (n.headx < 0 || n.headx >= n.Data.Width() || n.heady < 0 || n.heady >= n.Data.Height()) continue;
-							if (n.Data.Height() <= 0 || n.Data.Width() <= 0) continue;
+						if (x == n.DataReal.LastX() && n.DataReal.ColumnEquals(n.DataReal.LastX(), 0)) {
+							n.DataReal = n.DataReal.SliceX(0, n.DataReal.LastX());
+							if (n.headx < 0 || n.headx >= n.DataReal.Width() || n.heady < 0 || n.heady >= n.DataReal.Height()) continue;
+							if (n.DataReal.Height() <= 0 || n.DataReal.Width() <= 0) continue;
 						}
-						if (y == n.Data.LastY() && n.Data.RowEquals(n.Data.LastY(), 0)) {
-							n.Data = n.Data.SliceY(0, n.Data.LastY());
-							if (n.headx < 0 || n.headx >= n.Data.Width() || n.heady < 0 || n.heady >= n.Data.Height()) continue;
-							if (n.Data.Height() <= 0 || n.Data.Width() <= 0) continue;
+						if (y == n.DataReal.LastY() && n.DataReal.RowEquals(n.DataReal.LastY(), 0)) {
+							n.DataReal = n.DataReal.SliceY(0, n.DataReal.LastY());
+							if (n.headx < 0 || n.headx >= n.DataReal.Width() || n.heady < 0 || n.heady >= n.DataReal.Height()) continue;
+							if (n.DataReal.Height() <= 0 || n.DataReal.Width() <= 0) continue;
 						}
 						n.Cost += ths.TCostCons[0];
 						retv.AddLast(n);
@@ -620,6 +627,51 @@ namespace sceneparse
 				//ExpandLeftTail,
 				//ExpandDownTail,
 				//ExpandUpTail,
+			};
+			TransformsMulti = new VisTransMulti[] {
+				ExpandMulti,
+				ContractMulti,
+			};
+		}
+	}
+	
+	public class ChainGridN : BaseGridVisNode, IChainVisNode {
+		public int headx {get; set;}
+		public int heady {get; set;}
+		public int tailx {get; set;}
+		public int taily {get; set;}
+		public static IEnumerable<IVisNode> ExpandMulti(IVisNode ths) {
+			var retv = ChainN.ExpandMulti(ths);
+			foreach (IVisNode x in retv) {
+				x.Data = x.DataReal.ScaleGrid(x.GridScale);
+			}
+			return retv;
+		}
+		public static IEnumerable<IVisNode> ContractMulti(IVisNode ths) {
+			var retv = ChainN.ContractMulti(ths);
+			foreach (IVisNode x in retv) {
+				x.Data = x.DataReal.ScaleGrid(x.GridScale);
+			}
+			return retv;
+		}
+		public ChainGridN() {
+			Name = "ChainGridN";
+			DataReal = new int[2,1] {{255}, {255}};
+			GridScale = 1;
+			Data = DataReal.ScaleGrid(GridScale);
+			MaxCost = 100000;
+			TCostCons = new int[] {1,1,1,1};
+			Transforms = new VisTrans[] {
+				//ExpandRightHead,
+				//ExpandLeftHead,
+				//ExpandDownHead,
+				//ExpandUpHead,
+				//ExpandRightTail,
+				//ExpandLeftTail,
+				//ExpandDownTail,
+				//ExpandUpTail,
+				ScaleUp,
+				ScaleDown,
 			};
 			TransformsMulti = new VisTransMulti[] {
 				ExpandMulti,

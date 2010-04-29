@@ -504,11 +504,28 @@ namespace sceneparse
 			n.Data = Render(n.radius, n.numitems);
 			return n;
 		}
+		public static IVisNode DoubleItems(IVisNode thso) {
+			var ths = (IRingVisNode)thso;
+			var n = (IRingVisNode)ths.DeepCopyNoData();
+			n.numitems *= 2;
+			n.Cost += ths.TCostCons[0];
+			n.Data = Render(n.radius, n.numitems);
+			return n;
+		}
 		public static IVisNode RmItem(IVisNode thso) {
 			var ths = (IRingVisNode)thso;
 			var n = (IRingVisNode)ths.DeepCopyNoData();
 			--n.numitems;
 			if (n.numitems == 0) return null;
+			n.Cost += ths.TCostCons[0];
+			n.Data = Render(n.radius, n.numitems);
+			return n;
+		}
+		public static IVisNode HalveItems(IVisNode thso) {
+			var ths = (IRingVisNode)thso;
+			if (ths.numitems % 2 != 0) return null;
+			var n = (IRingVisNode)ths.DeepCopyNoData();
+			n.numitems /= 2;
 			n.Cost += ths.TCostCons[0];
 			n.Data = Render(n.radius, n.numitems);
 			return n;
@@ -530,6 +547,10 @@ namespace sceneparse
 			n.Data = Render(n.radius, n.numitems);
 			return n;
 		}
+		public override string Describe()
+		{
+			return Name+" of radius "+radius+" with "+numitems+" items";
+		}
 		public RingN() {
 			Name = "RingN";
 			radius = 3;
@@ -542,6 +563,8 @@ namespace sceneparse
 				RmItem,
 				ExpandRadius,
 				ContractRadius,
+				DoubleItems,
+				HalveItems,
 			};
 		}
 	}

@@ -180,6 +180,22 @@ namespace sceneparse
 			return total;
 		}
 		
+		public static int[,] Subtract(this int[,] v, int[,] s) {
+			if (v.Width() != s.Width())
+				throw new Exception("width mismatch");
+			if (v.Height() != s.Height())
+				throw new Exception("height mismatch");
+			var o = v.DeepCopy();
+			for (int y = 0; y < v.Height(); ++y) {
+				for (int x = 0; x < v.Width(); ++x) {
+					if (s[x,y] > 0) {
+						o[x,y] = 0;
+					}
+				}
+			}
+			return o;
+		}
+		
 		public static void Extend<T>(this Queue<T> v, IEnumerable<T> n) {
 			foreach (T x in n) {
 				v.Enqueue(x);
@@ -276,14 +292,18 @@ namespace sceneparse
 			return true;
 		}
 		
+		public static void CopyMatrix<T>(this T[,] v, T[,] o) {
+			v.CopyMatrix(o, 0, 0);
+		}
+		
 		public static void CopyMatrix<T>(this T[,] v, T[,] o, int startx, int starty) {
-			if (o.Width()+startx > v.Width())
+			if (v.Width()+startx > o.Width())
 				throw new Exception("copied matrix's width too high");
-			if (o.Height()+starty > v.Height())
+			if (v.Height()+starty > o.Height())
 				throw new Exception("copied matrix's height too high");
-			for (int y = 0; y < o.Height(); ++y) {
-				for (int x = 0; x < o.Width(); ++x) {
-					v[startx+x,starty+y] = o[x,y];
+			for (int y = 0; y < v.Height(); ++y) {
+				for (int x = 0; x < v.Width(); ++x) {
+					o[startx+x,starty+y] = v[x,y];
 				}
 			}
 		}

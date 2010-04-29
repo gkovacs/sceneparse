@@ -296,6 +296,7 @@ namespace sceneparse
 			int[,] img1 = null;
 			bool show_help = false;
 			bool useheuristic = false;
+			bool decompose = false;
 			bool imgcmp = false;
 			string imgcomparer = "sceneparse.FullPixelDiffImageComparer";
 			IVisNode[] genos = null;
@@ -303,6 +304,7 @@ namespace sceneparse
 			var opset = new NDesk.Options.OptionSet() {
 				{"r|ref=", "the {REF} image file", (string v) => {
 						refimg = LoadImage(v);
+						useheuristic = true;
 					}},
 				{"i|img=", "the {IMAGE} file to load", (string v) => {
 						img1 = LoadImage(v);
@@ -325,6 +327,18 @@ namespace sceneparse
 						for (int i = 0; i < fil.Length; ++i) {
 							genos[i] = DeSerializeFromFile(fil[i].FullName);
 						}
+					}},
+				{"d|decompose=", "comma,separted {LIST} of objects", (string v) => {
+						var objnames = v.Split(',');
+						genos = new IVisNode[objnames.Length];
+						for (int i = 0; i < objnames.Length; ++i) {
+							var nv = objnames[i].DeepCopy();
+							if (!nv.Contains(".")) nv = "sceneparse."+nv;
+							genos[i] = (IVisNode)Activator.CreateInstance(Type.GetType(nv));
+						}
+						numiter = 100;
+						decompose = true;
+						useheuristic = true;
 					}},
 				{"t|itr=", "number of {ITERATIONS} to go", (string v) => {
 						numiter = int.Parse(v);
@@ -387,7 +401,69 @@ namespace sceneparse
 					Console.WriteLine(heuv+" at "+xout+","+yout);
 				}
 			}
-			if (genos != null) {
+			if (decompose) {
+				int imgn = 0;
+				int[,] fullimg = new int[refimg.Width(),refimg.Height()];
+				int[,] supstruct = new int[refimg.Width(),refimg.Height()];
+				int[,] rendertarg = new int[refimg.Width(),refimg.Height()];
+				int subimgn = 0;
+				var search = new SearchAstar((IVisNode cn) => {
+					Console.WriteLine(cn.Describe());
+					Console.WriteLine();
+					if (rendertarg != null) {
+						cn.Data.CopyMatrix(rendertarg, cn.StartX, cn.StartY);
+						rendertarg.ToPBM("out"+subimgn+"-"+imgn);
+						rendertarg.SetRegion(0, cn.StartX, cn.StartX+cn.Data.Width()-1, cn.StartY, cn.StartY+cn.Data.Height()-1);
+					} else {
+						cn.Data.ToPBM("out"+subimgn+"-"+imgn);
+					}
+					cn.SerializeToFile("out"+subimgn+"-"+imgn);
+					++imgn;
+				});
+				int BestHeu = int.MaxValue;
+				IVisNode BestNode = null;
+				IImageComparer imgc = (IImageComparer)Activator.CreateInstance(Type.GetType(imgcomparer), new object[] {refimg});
+				search.FlushNodeCache = imgc.FlushNodeCache;
+				search.FullFlushNodeCache = imgc.FullFlushNodeCache;
+				search.NodeHeuristic = (IVisNode cn) => {
+					//return 0; // disable heuristic
+					
+					return imgc.CompareImg(cn);
+				};
+				search.NodeTermination = (IVisNode cn) => {
+					if (cn.Heuv < BestHeu) {
+						BestHeu = cn.Heuv;
+						BestNode = cn;
+						search.Lifetime = numiter;
+					}
+					if (cn.Heuv <= 0) {
+						return true;
+					}
+					Console.WriteLine("current heuv is"+cn.Heuv);
+					return false;
+				};
+				search.Lifetime = numiter;
+				search.AddNewRange(genos);
+				search.Run();
+				Console.WriteLine("object type is"+BestNode.Name);
+				Console.WriteLine("object description is"+BestNode.Describe());
+				Console.WriteLine("heuristic value is "+BestNode.Heuv);
+				if (rendertarg != null) {
+					BestNode.Data.CopyMatrix(rendertarg, BestNode.StartX, BestNode.StartY);
+					rendertarg.ToPBM("outresult"+subimgn);
+					//rendertarg.SetRegion(0, BestNode.StartX, BestNode.StartX+BestNode.Data.Width()-1, BestNode.StartY, BestNode.StartY+BestNode.Data.Height()-1);
+				} else {
+					BestNode.Data.ToPBM("outresult"+subimgn);
+				}
+				BestNode.SerializeToFile("outresult"+subimgn);
+				supstruct[BestNode.StartX+BestNode.Width/2, BestNode.StartY+BestNode.Height/2] = 255;
+				supstruct.ToPBM("outresult-sup");
+				rendertarg.CopyMatrix(fullimg);
+				fullimg.ToPBM("outresult-full");
+				//rendertarg.SetAll(0);
+				rendertarg.SetRegion(0, BestNode.StartX, BestNode.StartX+BestNode.Data.Width()-1, BestNode.StartY, BestNode.StartY+BestNode.Data.Height()-1);
+			}
+			else if (genos != null) {
 				int imgn = 0;
 				int[,] rendertarg = null;
 				if (refimg != null) {
@@ -397,7 +473,7 @@ namespace sceneparse
 					Console.WriteLine(cn.Describe());
 					Console.WriteLine();
 					if (rendertarg != null) {
-						rendertarg.CopyMatrix(cn.Data, cn.StartX, cn.StartY);
+						cn.Data.CopyMatrix(rendertarg, cn.StartX, cn.StartY);
 						rendertarg.ToPBM("out"+imgn);
 						rendertarg.SetRegion(0, cn.StartX, cn.StartX+cn.Data.Width()-1, cn.StartY, cn.StartY+cn.Data.Height()-1);
 					} else {
@@ -437,7 +513,7 @@ namespace sceneparse
 					Console.WriteLine("object description is"+BestNode.Describe());
 					Console.WriteLine("heuristic value is "+BestNode.Heuv);
 					if (rendertarg != null) {
-						rendertarg.CopyMatrix(BestNode.Data, BestNode.StartX, BestNode.StartY);
+						BestNode.Data.CopyMatrix(rendertarg, BestNode.StartX, BestNode.StartY);
 						rendertarg.ToPBM("outresult");
 						rendertarg.SetRegion(0, BestNode.StartX, BestNode.StartX+BestNode.Data.Width()-1, BestNode.StartY, BestNode.StartY+BestNode.Data.Height()-1);
 					} else {

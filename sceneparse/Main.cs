@@ -298,7 +298,6 @@ namespace sceneparse
 			bool useheuristic = false;
 			bool imgcmp = false;
 			string imgcomparer = "sceneparse.FullPixelDiffImageComparer";
-			IVisNode geno = null;
 			IVisNode[] genos = null;
 			int numiter = int.MaxValue;
 			var opset = new NDesk.Options.OptionSet() {
@@ -308,7 +307,7 @@ namespace sceneparse
 				{"i|img=", "the {IMAGE} file to load", (string v) => {
 						img1 = LoadImage(v);
 					}},
-				{"d|decide=", "comma,separted {LIST} of objects", (string v) => {
+				{"g|gen=", "comma,separted {LIST} of objects", (string v) => {
 						var objnames = v.Split(',');
 						genos = new IVisNode[objnames.Length];
 						for (int i = 0; i < objnames.Length; ++i) {
@@ -316,14 +315,6 @@ namespace sceneparse
 							if (!nv.Contains(".")) nv = "sceneparse."+nv;
 							genos[i] = (IVisNode)Activator.CreateInstance(Type.GetType(nv));
 						}
-					}},
-				{"t|itr=", "number of {ITERATIONS} to go", (string v) => {
-						numiter = int.Parse(v);
-					}},
-				{"m|comparer=", "the {COMPARER} to use", (string v) => {
-						imgcomparer = v.DeepCopy();
-						if (!imgcomparer.Contains("ImageComparer")) imgcomparer += "ImageComparer";
-						if (!imgcomparer.Contains(".")) imgcomparer = "sceneparse."+imgcomparer;
 					}},
 				{"l|load=", "object {TYPE} to load", (string v) => {
 						var nv = v.DeepCopy();
@@ -335,10 +326,13 @@ namespace sceneparse
 							genos[i] = DeSerializeFromFile(fil[i].FullName);
 						}
 					}},
-				{"g|gen=", "object {TYPE} to generate", (string v) => {
-						var nv = v.DeepCopy();
-						if (!nv.Contains(".")) nv = "sceneparse."+nv;
-						geno = (IVisNode)Activator.CreateInstance(Type.GetType(nv));
+				{"t|itr=", "number of {ITERATIONS} to go", (string v) => {
+						numiter = int.Parse(v);
+					}},
+				{"m|comparer=", "the {COMPARER} to use", (string v) => {
+						imgcomparer = v.DeepCopy();
+						if (!imgcomparer.Contains("ImageComparer")) imgcomparer += "ImageComparer";
+						if (!imgcomparer.Contains(".")) imgcomparer = "sceneparse."+imgcomparer;
 					}},
 				{"topgm=", "png {FILE} to convert", (string v) => {
 						LoadImage(v).ToPGM(v.ReplaceExtension("pgm"));
@@ -393,7 +387,7 @@ namespace sceneparse
 					Console.WriteLine(heuv+" at "+xout+","+yout);
 				}
 			}
-			if (genos != null || geno != null) {
+			if (genos != null) {
 				int imgn = 0;
 				int[,] rendertarg = null;
 				if (refimg != null) {
@@ -436,10 +430,7 @@ namespace sceneparse
 					};
 				}
 				search.Lifetime = numiter;
-				if (genos != null)
-					search.AddNewRange(genos);
-				else if (geno != null)
-					search.AddNew(geno);
+				search.AddNewRange(genos);
 				search.Run();
 				if (useheuristic) {
 					Console.WriteLine("object type is"+BestNode.Name);

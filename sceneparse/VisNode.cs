@@ -112,7 +112,7 @@ namespace sceneparse
 		int StartY {get; set;}
 		int[] CachedXCoords {get; set;}
 		int[] CachedYCoords {get; set;}
-		void Init();
+		void Init(IVisNode n);
 	}
 	
 	public abstract class BaseVisNode : IVisNode {
@@ -221,9 +221,9 @@ namespace sceneparse
 					"Height: "+this.Height;
 		}
 		public BaseVisNode() {
-			Init();
+			Init(this);
 		}
-		public virtual void Init() {
+		public virtual void Init(IVisNode n) {
 			
 		}
 	}
@@ -267,12 +267,12 @@ namespace sceneparse
 			if (n.DataReal.Width() < 1 || n.DataReal.Height() < 1) return null;
 			return n;
 		}
-		public override void Init() {
-			Name = "SquareN";
-			Data = new int[3,3] {{255,255,255},{255,255,255},{255,255,255}};
-			MaxCost = 100000;
-			TCostCons = new int[] {1,1};
-			Transforms = new VisTrans[] {
+		public override void Init(IVisNode n) {
+			n.Name = "SquareN";
+			n.Data = new int[3,3] {{255,255,255},{255,255,255},{255,255,255}};
+			n.MaxCost = 100000;
+			n.TCostCons = new int[] {1,1};
+			n.Transforms = new VisTrans[] {
 				Expand,
 				Contract,
 			};
@@ -293,14 +293,14 @@ namespace sceneparse
 			n.Data = n.DataReal.ScaleGrid(n.GridScale);
 			return n;
 		}
-		public override void Init() {
-			Name = "SquareGridN";
-			DataReal = new int[3,3] {{255,255,255},{255,255,255},{255,255,255}};
-			GridScale = 1;
-			Data = DataReal.ScaleGrid(GridScale);
-			MaxCost = 100000;
-			TCostCons = new int[] {1,1};
-			Transforms = new VisTrans[] {
+		public override void Init(IVisNode n) {
+			n.Name = "SquareGridN";
+			n.DataReal = new int[3,3] {{255,255,255},{255,255,255},{255,255,255}};
+			n.GridScale = 1;
+			n.Data = n.DataReal.ScaleGrid(n.GridScale);
+			n.MaxCost = 100000;
+			n.TCostCons = new int[] {1,1};
+			n.Transforms = new VisTrans[] {
 				Expand,
 				Contract,
 				ScaleUp,
@@ -339,12 +339,12 @@ namespace sceneparse
 			if (n.DataReal.Width() < 1 || n.DataReal.Height() < 1) return null;
 			return n;
 		}
-		public override void Init() {
-			Name = "RectangleN";
-			Data = new int[2,3] {{255,255,255},{255,255,255}};
-			MaxCost = 100000;
-			TCostCons = new int[] {1,1,1,1};
-			Transforms = new VisTrans[] {
+		public override void Init(IVisNode n) {
+			n.Name = "RectangleN";
+			n.Data = new int[2,3] {{255,255,255},{255,255,255}};
+			n.MaxCost = 100000;
+			n.TCostCons = new int[] {1,1,1,1};
+			n.Transforms = new VisTrans[] {
 				ExpandX,
 				ExpandY,
 				ContractX,
@@ -379,14 +379,14 @@ namespace sceneparse
 			n.Data = n.DataReal.ScaleGrid(n.GridScale);
 			return n;
 		}
-		public override void Init() {
-			Name = "RectangleGridN";
-			DataReal = new int[2,3] {{255,255,255},{255,255,255}};
-			GridScale = 1;
-			Data = DataReal.ScaleGrid(GridScale);
-			MaxCost = 100000;
-			TCostCons = new int[] {1};
-			Transforms = new VisTrans[] {
+		public override void Init(IVisNode n) {
+			n.Name = "RectangleGridN";
+			n.DataReal = new int[2,3] {{255,255,255},{255,255,255}};
+			n.GridScale = 1;
+			n.Data = n.DataReal.ScaleGrid(GridScale);
+			n.MaxCost = 100000;
+			n.TCostCons = new int[] {1};
+			n.Transforms = new VisTrans[] {
 				ExpandX,
 				ExpandY,
 				ContractX,
@@ -439,12 +439,12 @@ namespace sceneparse
 			else if (ths.GrowDirection == 0) n.GrowDirection = 2;
 			return n;
 		}
-		public override void Init() {
-			Name = "TowerN";
-			Data = new int[1,1] {{255}};
-			MaxCost = 100000;
-			TCostCons = new int[] {1};
-			Transforms = new VisTrans[] {
+		public override void Init(IVisNode n) {
+			n.Name = "TowerN";
+			n.Data = new int[1,1] {{255}};
+			n.MaxCost = 100000;
+			n.TCostCons = new int[] {1};
+			n.Transforms = new VisTrans[] {
 				ExpandX,
 				ExpandY,
 				ContractX,
@@ -483,14 +483,14 @@ namespace sceneparse
 			n.Data = n.DataReal.ScaleGrid(n.GridScale);
 			return n;
 		}
-		public override void Init() {
-			Name = "TowerGridN";
-			DataReal = new int[1,1] {{255}};
-			GridScale = 1;
-			Data = DataReal.ScaleGrid(GridScale);
-			MaxCost = 100000;
-			TCostCons = new int[] {1};
-			Transforms = new VisTrans[] {
+		public override void Init(IVisNode n) {
+			n.Name = "TowerGridN";
+			n.DataReal = new int[1,1] {{255}};
+			n.GridScale = 1;
+			n.Data = n.DataReal.ScaleGrid(GridScale);
+			n.MaxCost = 100000;
+			n.TCostCons = new int[] {1};
+			n.Transforms = new VisTrans[] {
 				ExpandX,
 				ExpandY,
 				ContractX,
@@ -597,14 +597,15 @@ namespace sceneparse
 		{
 			return Name+" of radius "+radius+" with "+numitems+" items at rotation "+rotation;
 		}
-		public override void Init() {
-			Name = "RingN";
-			radius = 3;
-			numitems = 3;
-			this.Render();
-			MaxCost = 100000;
-			TCostCons = new int[] {1,1,1,1};
-			Transforms = new VisTrans[] {
+		public override void Init(IVisNode nn) {
+			var n = (IRingVisNode)nn;
+			n.Name = "RingN";
+			n.radius = 3;
+			n.numitems = 3;
+			n.Render();
+			n.MaxCost = 100000;
+			n.TCostCons = new int[] {1,1,1,1};
+			n.Transforms = new VisTrans[] {
 				AddItem,
 				RmItem,
 				ExpandRadius,
@@ -754,12 +755,12 @@ namespace sceneparse
 			}
 			return retv;
 		}
-		public override void Init() {
-			Name = "ChainN";
-			Data = new int[2,1] {{255}, {255}};
-			MaxCost = 100000;
-			TCostCons = new int[] {1,1,1,1};
-			Transforms = new VisTrans[] {
+		public override void Init(IVisNode n) {
+			n.Name = "ChainN";
+			n.Data = new int[2,1] {{255}, {255}};
+			n.MaxCost = 100000;
+			n.TCostCons = new int[] {1,1,1,1};
+			n.Transforms = new VisTrans[] {
 				//ExpandRightHead,
 				//ExpandLeftHead,
 				//ExpandDownHead,
@@ -769,7 +770,7 @@ namespace sceneparse
 				//ExpandDownTail,
 				//ExpandUpTail,
 			};
-			TransformsMulti = new VisTransMulti[] {
+			n.TransformsMulti = new VisTransMulti[] {
 				ExpandMulti,
 				ContractMulti,
 			};
@@ -796,14 +797,14 @@ namespace sceneparse
 			}
 			return retv;
 		}
-		public override void Init() {
-			Name = "ChainGridN";
-			DataReal = new int[2,1] {{255}, {255}};
-			GridScale = 1;
-			Data = DataReal.ScaleGrid(GridScale);
-			MaxCost = 100000;
-			TCostCons = new int[] {1,1,1,1};
-			Transforms = new VisTrans[] {
+		public override void Init(IVisNode n) {
+			n.Name = "ChainGridN";
+			n.DataReal = new int[2,1] {{255}, {255}};
+			n.GridScale = 1;
+			n.Data = n.DataReal.ScaleGrid(GridScale);
+			n.MaxCost = 100000;
+			n.TCostCons = new int[] {1,1,1,1};
+			n.Transforms = new VisTrans[] {
 				//ExpandRightHead,
 				//ExpandLeftHead,
 				//ExpandDownHead,
@@ -815,7 +816,7 @@ namespace sceneparse
 				ScaleUp,
 				ScaleDown,
 			};
-			TransformsMulti = new VisTransMulti[] {
+			n.TransformsMulti = new VisTransMulti[] {
 				ExpandMulti,
 				ContractMulti,
 			};

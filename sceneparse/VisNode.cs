@@ -570,7 +570,7 @@ namespace sceneparse
 		}
 		public override string Describe()
 		{
-			return Name+" of radius "+radius+" with "+numitems+" items";
+			return Name+" of radius "+radius+" with "+numitems+" items at rotation "+rotation;
 		}
 		public RingN() {
 			Name = "RingN";

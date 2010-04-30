@@ -30,48 +30,48 @@ namespace sceneparse
 	public delegate int HeuristicDelegate<T>(T n);
 	public delegate bool TerminationDelegate<T>(T n);
 	
-	public interface ISearchAlgorithm {
-		C5.IntervalHeap<IVisNode> Agenda {get; set;}
-		Dictionary<int[,], IVisNode> Visited {get; set;}
-		NodeActionDelegate<IVisNode> NodeAction {get; set;}
-		HeuristicDelegate<IVisNode> NodeHeuristic {get; set;}
-		TerminationDelegate<IVisNode> NodeTermination {get; set;}
-		NodeActionDelegate<IVisNode> FlushNodeCache {get; set;}
-		NodeActionDelegate<IVisNode> FullFlushNodeCache {get; set;}
+	public interface ISearchAlgorithm<T> {
+		C5.IntervalHeap<T> Agenda {get; set;}
+		HashSet<T> Visited {get; set;}
+		NodeActionDelegate<T> NodeAction {get; set;}
+		HeuristicDelegate<T> NodeHeuristic {get; set;}
+		TerminationDelegate<T> NodeTermination {get; set;}
+		NodeActionDelegate<T> FlushNodeCache {get; set;}
+		NodeActionDelegate<T> FullFlushNodeCache {get; set;}
 		int Lifetime {get; set;}
-		void Add(IVisNode n);
-		void AddNew(IVisNode n);
-		void AddRange(IEnumerable<IVisNode> nl);
-		void AddNewRange(IEnumerable<IVisNode> nl);
+		void Add(T n);
+		void AddNew(T n);
+		void AddRange(IEnumerable<T> nl);
+		void AddNewRange(IEnumerable<T> nl);
 		bool Next();
 		void Run();
 		void Reset();
 	}
 	
-	public abstract class BaseSearchAlgorithm : ISearchAlgorithm {
-		public C5.IntervalHeap<IVisNode> Agenda {get; set;}
-		public Dictionary<int[,], IVisNode> Visited {get; set;}
-		public NodeActionDelegate<IVisNode> NodeAction {get; set;}
+	public abstract class BaseSearchAlgorithm<T> : ISearchAlgorithm<T> {
+		public C5.IntervalHeap<T> Agenda {get; set;}
+		public HashSet<T> Visited {get; set;}
+		public NodeActionDelegate<T> NodeAction {get; set;}
 		public int Lifetime {get; set;}
-		public HeuristicDelegate<IVisNode> NodeHeuristic {get; set;}
-		public TerminationDelegate<IVisNode> NodeTermination {get; set;}
-		public NodeActionDelegate<IVisNode> FlushNodeCache {get; set;}
-		public NodeActionDelegate<IVisNode> FullFlushNodeCache {get; set;}
+		public HeuristicDelegate<T> NodeHeuristic {get; set;}
+		public TerminationDelegate<T> NodeTermination {get; set;}
+		public NodeActionDelegate<T> FlushNodeCache {get; set;}
+		public NodeActionDelegate<T> FullFlushNodeCache {get; set;}
 		public int BestHeu {get; set;}
-		public virtual void Add(IVisNode n) {
+		public virtual void Add(T n) {
 			this.Agenda.Add(n);
-			this.Visited.Add(n.Data, n);
+			this.Visited.Add(n);
 		}
-		public virtual void AddNew(IVisNode n) {
+		public virtual void AddNew(T n) {
 			this.Agenda.Add(n);
-			this.Visited.Add(n.Data, n);
+			this.Visited.Add(n);
 		}
-		public void AddRange(IEnumerable<IVisNode> nl) {
+		public void AddRange(IEnumerable<T> nl) {
 			foreach (var n in nl) {
 				Add(n);
 			}
 		}
-		public void AddNewRange(IEnumerable<IVisNode> nl) {
+		public void AddNewRange(IEnumerable<T> nl) {
 			foreach (var n in nl) {
 				AddNew(n);
 			}
@@ -88,10 +88,10 @@ namespace sceneparse
 		}
 	}
 	
-	public class SearchAstar : BaseSearchAlgorithm {
+	public class SearchAstar : BaseSearchAlgorithm<IVisNode> {
 		public SearchAstar(NodeActionDelegate<IVisNode> nadel, HeuristicDelegate<IVisNode> heudel, TerminationDelegate<IVisNode> termdel, NodeActionDelegate<IVisNode> flushncache, NodeActionDelegate<IVisNode> fullflushncache) {
 			Agenda = new C5.IntervalHeap<IVisNode>(new VisNodeComparer());
-			Visited = new Dictionary<int[,], IVisNode>(new MatrixEqualityComparerInt());
+			Visited = new HashSet<IVisNode>();
 			NodeAction = nadel;
 			NodeHeuristic = heudel;
 			NodeTermination = termdel;
@@ -120,7 +120,7 @@ namespace sceneparse
 			//	BestHeu = n.Heuv;
 			//}
 			this.Agenda.Add(n);
-			this.Visited.Add(n.Data, n);
+			this.Visited.Add(n);
 		}
 		
 		public override void Add(IVisNode n) {
@@ -130,7 +130,7 @@ namespace sceneparse
 			//	BestHeu = n.Heuv;
 			//}
 			this.Agenda.Add(n);
-			this.Visited.Add(n.Data, n);
+			this.Visited.Add(n);
 		}
 		public override bool Next() {
 			if (Lifetime != int.MaxValue) {
@@ -150,7 +150,7 @@ namespace sceneparse
 			if (NodeTermination(cn)) return false;
 			var nvals = cn.Next();
 			foreach (var x in nvals) {
-				if (Visited.ContainsKey(x.Data)) {
+				if (Visited.Contains(x)) {
 					continue;
 				} else {
 					Add(x);

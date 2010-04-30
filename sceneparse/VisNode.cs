@@ -103,6 +103,7 @@ namespace sceneparse
 		VisTransMulti[] TransformsMulti {get; set;}
 		//VisTransCost[] TCosts {get; set;}
 		int[] TCostCons {get; set;}
+		bool IsGrid {get; set;}
 		int[,] DataReal {get; set;}
 		int GridScale {get; set;}
 		//int[,] Render();
@@ -142,20 +143,33 @@ namespace sceneparse
 			}}
 		//public VisTransCost[] TCosts {get; set;}
 		public int[] TCostCons {get; set;}
-		public virtual int[,] DataReal {
+		protected bool _IsGrid = false;
+		public bool IsGrid {
 			get {
-				return Data;
+				return _IsGrid;
 			}
 			set {
-				Data = value;
+				_IsGrid = value;
 			}
 		}
-		public virtual int GridScale {
+		protected int[,] _DataReal;
+		public virtual int[,] DataReal {
 			get {
-				return 1;
+				if (_IsGrid) return _DataReal;
+				else return Data;
 			}
 			set {
-				
+				if (_IsGrid) _DataReal = value;
+				else Data = value;
+			}
+		}
+		protected int _GridScale = 1;
+		public virtual int GridScale {
+			get {
+				return _GridScale;
+			}
+			set {
+				_GridScale = value;
 			}
 		}
 		public int StartX {get; set;}
@@ -228,9 +242,7 @@ namespace sceneparse
 		}
 	}
 	
-	public abstract class BaseGridVisNode : BaseVisNode {
-		public override int[,] DataReal {get; set;}
-		public override int GridScale {get; set;}
+	public static class GridVisNode {
 		public static IVisNode ScaleUp(IVisNode thso) {
 			var ths = thso;
 			var n = ths.DeepCopyNoData();
@@ -248,7 +260,6 @@ namespace sceneparse
 			n.Data = n.DataReal.ScaleGrid(n.GridScale);
 			return n;
 		}
-		public BaseGridVisNode() : base() {}
 	}
 	
 	public class SquareN : BaseVisNode {
@@ -280,7 +291,7 @@ namespace sceneparse
 		public SquareN() : base() {}
 	}
 	
-	public class SquareGridN : BaseGridVisNode {
+	public class SquareGridN : BaseVisNode {
 		public static IVisNode Expand(IVisNode ths) {
 			var n = SquareN.Expand(ths);
 			if (n == null) return null;
@@ -295,6 +306,7 @@ namespace sceneparse
 		}
 		public override void Init(IVisNode n) {
 			n.Name = "SquareGridN";
+			n.IsGrid = true;
 			n.DataReal = new int[3,3] {{255,255,255},{255,255,255},{255,255,255}};
 			n.GridScale = 1;
 			n.Data = n.DataReal.ScaleGrid(n.GridScale);
@@ -303,8 +315,8 @@ namespace sceneparse
 			n.Transforms = new VisTrans[] {
 				Expand,
 				Contract,
-				ScaleUp,
-				ScaleDown,
+				GridVisNode.ScaleUp,
+				GridVisNode.ScaleDown,
 			};
 		}
 		public SquareGridN() : base() {}
@@ -354,7 +366,7 @@ namespace sceneparse
 		public RectangleN() : base() {}
 	}
 	
-	public class RectangleGridN : BaseGridVisNode {
+	public class RectangleGridN : BaseVisNode {
 		public static IVisNode ExpandX(IVisNode ths) {
 			var n = RectangleN.ExpandX(ths);
 			if (n == null) return null;
@@ -381,6 +393,7 @@ namespace sceneparse
 		}
 		public override void Init(IVisNode n) {
 			n.Name = "RectangleGridN";
+			n.IsGrid = true;
 			n.DataReal = new int[2,3] {{255,255,255},{255,255,255}};
 			n.GridScale = 1;
 			n.Data = n.DataReal.ScaleGrid(GridScale);
@@ -391,8 +404,8 @@ namespace sceneparse
 				ExpandY,
 				ContractX,
 				ContractY,
-				ScaleUp,
-				ScaleDown,
+				GridVisNode.ScaleUp,
+				GridVisNode.ScaleDown,
 			};
 		}
 		public RectangleGridN() : base() {}
@@ -454,7 +467,7 @@ namespace sceneparse
 		public TowerN() : base() {}
 	}
 	
-	public class TowerGridN : BaseGridVisNode, ITowerVisNode {
+	public class TowerGridN : BaseVisNode, ITowerVisNode {
 		public int GrowDirection {get; set;}
 		// 0 = undecided
 		// 1 = up/down
@@ -485,6 +498,7 @@ namespace sceneparse
 		}
 		public override void Init(IVisNode n) {
 			n.Name = "TowerGridN";
+			n.IsGrid = true;
 			n.DataReal = new int[1,1] {{255}};
 			n.GridScale = 1;
 			n.Data = n.DataReal.ScaleGrid(GridScale);
@@ -495,8 +509,8 @@ namespace sceneparse
 				ExpandY,
 				ContractX,
 				ContractY,
-				ScaleUp,
-				ScaleDown,
+				GridVisNode.ScaleUp,
+				GridVisNode.ScaleDown,
 			};
 		}
 		public TowerGridN() : base() {}
@@ -778,7 +792,7 @@ namespace sceneparse
 		public ChainN() : base() {}
 	}
 	
-	public class ChainGridN : BaseGridVisNode, IChainVisNode {
+	public class ChainGridN : BaseVisNode, IChainVisNode {
 		public int headx {get; set;}
 		public int heady {get; set;}
 		public int tailx {get; set;}
@@ -799,6 +813,7 @@ namespace sceneparse
 		}
 		public override void Init(IVisNode n) {
 			n.Name = "ChainGridN";
+			n.IsGrid = true;
 			n.DataReal = new int[2,1] {{255}, {255}};
 			n.GridScale = 1;
 			n.Data = n.DataReal.ScaleGrid(GridScale);
@@ -813,8 +828,8 @@ namespace sceneparse
 				//ExpandLeftTail,
 				//ExpandDownTail,
 				//ExpandUpTail,
-				ScaleUp,
-				ScaleDown,
+				GridVisNode.ScaleUp,
+				GridVisNode.ScaleDown,
 			};
 			n.TransformsMulti = new VisTransMulti[] {
 				ExpandMulti,

@@ -112,6 +112,7 @@ namespace sceneparse
 		int StartY {get; set;}
 		int[] CachedXCoords {get; set;}
 		int[] CachedYCoords {get; set;}
+		void Init();
 	}
 	
 	public abstract class BaseVisNode : IVisNode {
@@ -219,6 +220,12 @@ namespace sceneparse
 					"Width: "+this.Width+"\n"+
 					"Height: "+this.Height;
 		}
+		public BaseVisNode() {
+			Init();
+		}
+		public virtual void Init() {
+			
+		}
 	}
 	
 	public abstract class BaseGridVisNode : BaseVisNode {
@@ -241,6 +248,7 @@ namespace sceneparse
 			n.Data = n.DataReal.ScaleGrid(n.GridScale);
 			return n;
 		}
+		public BaseGridVisNode() : base() {}
 	}
 	
 	public class SquareN : BaseVisNode {
@@ -259,7 +267,7 @@ namespace sceneparse
 			if (n.DataReal.Width() < 1 || n.DataReal.Height() < 1) return null;
 			return n;
 		}
-		public SquareN() {
+		public override void Init() {
 			Name = "SquareN";
 			Data = new int[3,3] {{255,255,255},{255,255,255},{255,255,255}};
 			MaxCost = 100000;
@@ -269,6 +277,7 @@ namespace sceneparse
 				Contract,
 			};
 		}
+		public SquareN() : base() {}
 	}
 	
 	public class SquareGridN : BaseGridVisNode {
@@ -284,7 +293,7 @@ namespace sceneparse
 			n.Data = n.DataReal.ScaleGrid(n.GridScale);
 			return n;
 		}
-		public SquareGridN() {
+		public override void Init() {
 			Name = "SquareGridN";
 			DataReal = new int[3,3] {{255,255,255},{255,255,255},{255,255,255}};
 			GridScale = 1;
@@ -298,6 +307,7 @@ namespace sceneparse
 				ScaleDown,
 			};
 		}
+		public SquareGridN() : base() {}
 	}
 	
 	public class RectangleN : BaseVisNode {
@@ -329,8 +339,7 @@ namespace sceneparse
 			if (n.DataReal.Width() < 1 || n.DataReal.Height() < 1) return null;
 			return n;
 		}
-
-		public RectangleN() {
+		public override void Init() {
 			Name = "RectangleN";
 			Data = new int[2,3] {{255,255,255},{255,255,255}};
 			MaxCost = 100000;
@@ -342,6 +351,7 @@ namespace sceneparse
 				ContractY,
 			};
 		}
+		public RectangleN() : base() {}
 	}
 	
 	public class RectangleGridN : BaseGridVisNode {
@@ -369,7 +379,7 @@ namespace sceneparse
 			n.Data = n.DataReal.ScaleGrid(n.GridScale);
 			return n;
 		}
-		public RectangleGridN() {
+		public override void Init() {
 			Name = "RectangleGridN";
 			DataReal = new int[2,3] {{255,255,255},{255,255,255}};
 			GridScale = 1;
@@ -385,6 +395,7 @@ namespace sceneparse
 				ScaleDown,
 			};
 		}
+		public RectangleGridN() : base() {}
 	}
 	
 	public interface ITowerVisNode : IVisNode {
@@ -428,7 +439,7 @@ namespace sceneparse
 			else if (ths.GrowDirection == 0) n.GrowDirection = 2;
 			return n;
 		}
-		public TowerN() {
+		public override void Init() {
 			Name = "TowerN";
 			Data = new int[1,1] {{255}};
 			MaxCost = 100000;
@@ -440,6 +451,7 @@ namespace sceneparse
 				ContractY,
 			};
 		}
+		public TowerN() : base() {}
 	}
 	
 	public class TowerGridN : BaseGridVisNode, ITowerVisNode {
@@ -471,7 +483,7 @@ namespace sceneparse
 			n.Data = n.DataReal.ScaleGrid(n.GridScale);
 			return n;
 		}
-		public TowerGridN() {
+		public override void Init() {
 			Name = "TowerGridN";
 			DataReal = new int[1,1] {{255}};
 			GridScale = 1;
@@ -487,6 +499,7 @@ namespace sceneparse
 				ScaleDown,
 			};
 		}
+		public TowerGridN() : base() {}
 	}
 	
 	public interface IRingVisNode : IVisNode {
@@ -584,7 +597,7 @@ namespace sceneparse
 		{
 			return Name+" of radius "+radius+" with "+numitems+" items at rotation "+rotation;
 		}
-		public RingN() {
+		public override void Init() {
 			Name = "RingN";
 			radius = 3;
 			numitems = 3;
@@ -602,6 +615,7 @@ namespace sceneparse
 				//RotateDown,
 			};
 		}
+		public RingN() : base() {}
 	}
 	
 	public interface IChainVisNode : IVisNode {
@@ -740,7 +754,7 @@ namespace sceneparse
 			}
 			return retv;
 		}
-		public ChainN() {
+		public override void Init() {
 			Name = "ChainN";
 			Data = new int[2,1] {{255}, {255}};
 			MaxCost = 100000;
@@ -760,6 +774,7 @@ namespace sceneparse
 				ContractMulti,
 			};
 		}
+		public ChainN() : base() {}
 	}
 	
 	public class ChainGridN : BaseGridVisNode, IChainVisNode {
@@ -781,7 +796,7 @@ namespace sceneparse
 			}
 			return retv;
 		}
-		public ChainGridN() {
+		public override void Init() {
 			Name = "ChainGridN";
 			DataReal = new int[2,1] {{255}, {255}};
 			GridScale = 1;
@@ -805,5 +820,6 @@ namespace sceneparse
 				ContractMulti,
 			};
 		}
+		public ChainGridN() : base() {}
 	}
 }

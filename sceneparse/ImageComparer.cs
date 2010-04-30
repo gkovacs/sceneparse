@@ -29,8 +29,8 @@ namespace sceneparse
 		int CompareImg(IVisNode cn);
 		int[,] RefImg {get; set;}
 		int[,] BaseImg {get; set;}
-		NodeActionDelegate FlushNodeCache {get;}
-		NodeActionDelegate FullFlushNodeCache {get;}
+		NodeActionDelegate<IVisNode>  FlushNodeCache {get;}
+		NodeActionDelegate<IVisNode> FullFlushNodeCache {get;}
 	}
 	
 	public abstract class BaseImageComparer : IImageComparer {
@@ -45,10 +45,10 @@ namespace sceneparse
 			cn.StartY = ty;
 			return outv;
 		}
-		public virtual NodeActionDelegate FlushNodeCache {
+		public virtual NodeActionDelegate<IVisNode> FlushNodeCache {
 			get {return (IVisNode cn) => {};}
 		}
-		public virtual NodeActionDelegate FullFlushNodeCache {
+		public virtual NodeActionDelegate<IVisNode> FullFlushNodeCache {
 			get {return FlushNodeCache;}
 		}
 	}
@@ -235,7 +235,7 @@ namespace sceneparse
 			: base(refi, basei) {}
 		public GlobalCachedPixelPropImageComparer(int[,] refi)
 			: base(refi) {}
-		public override NodeActionDelegate FlushNodeCache {
+		public override NodeActionDelegate<IVisNode> FlushNodeCache {
 			get {return (IVisNode cn) => {
 					Console.WriteLine("flushing new node with heuv "+cn.Heuv);
 					var total = base.CompareImgAllCoords(cn.Data);
@@ -269,7 +269,7 @@ namespace sceneparse
 		public CachedPixelPropImageComparer(int[,] refi)
 			: base(refi) {}
 		
-		public override NodeActionDelegate FlushNodeCache {
+		public override NodeActionDelegate<IVisNode> FlushNodeCache {
 			get {return (IVisNode cn) => {
 					Console.WriteLine("flushing new node with heuv "+cn.Heuv);
 					var total = base.CompareImgAllCoords(cn.Data);
@@ -382,7 +382,7 @@ namespace sceneparse
 			: base(refi, basei) {}
 		public FastCachedPixelPropImageComparer(int[,] refi)
 			: base(refi) {}
-		public override NodeActionDelegate FlushNodeCache {
+		public override NodeActionDelegate<IVisNode> FlushNodeCache {
 			get {return (IVisNode cn) => {
 					Console.WriteLine("flushing new node with heuv "+cn.Heuv);
 					var total = new List<int>(numcoords*5);
@@ -403,7 +403,7 @@ namespace sceneparse
 					//Console.WriteLine("total are "+total.MkString());
 				};}
 		}
-		public override NodeActionDelegate FullFlushNodeCache {
+		public override NodeActionDelegate<IVisNode> FullFlushNodeCache {
 			get {return base.FlushNodeCache;}
 		}
 	}

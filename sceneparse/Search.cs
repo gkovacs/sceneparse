@@ -26,18 +26,18 @@ using System.Collections.Generic;
 
 namespace sceneparse
 {
-	public delegate void NodeActionDelegate(IVisNode n);
-	public delegate int HeuristicDelegate(IVisNode n);
-	public delegate bool TerminationDelegate(IVisNode n);
+	public delegate void NodeActionDelegate<T>(T n);
+	public delegate int HeuristicDelegate<T>(T n);
+	public delegate bool TerminationDelegate<T>(T n);
 	
 	public interface ISearchAlgorithm {
 		C5.IntervalHeap<IVisNode> Agenda {get; set;}
 		Dictionary<int[,], IVisNode> Visited {get; set;}
-		NodeActionDelegate NodeAction {get; set;}
-		HeuristicDelegate NodeHeuristic {get; set;}
-		TerminationDelegate NodeTermination {get; set;}
-		NodeActionDelegate FlushNodeCache {get; set;}
-		NodeActionDelegate FullFlushNodeCache {get; set;}
+		NodeActionDelegate<IVisNode> NodeAction {get; set;}
+		HeuristicDelegate<IVisNode> NodeHeuristic {get; set;}
+		TerminationDelegate<IVisNode> NodeTermination {get; set;}
+		NodeActionDelegate<IVisNode> FlushNodeCache {get; set;}
+		NodeActionDelegate<IVisNode> FullFlushNodeCache {get; set;}
 		int Lifetime {get; set;}
 		void Add(IVisNode n);
 		void AddNew(IVisNode n);
@@ -51,12 +51,12 @@ namespace sceneparse
 	public abstract class BaseSearchAlgorithm : ISearchAlgorithm {
 		public C5.IntervalHeap<IVisNode> Agenda {get; set;}
 		public Dictionary<int[,], IVisNode> Visited {get; set;}
-		public NodeActionDelegate NodeAction {get; set;}
+		public NodeActionDelegate<IVisNode> NodeAction {get; set;}
 		public int Lifetime {get; set;}
-		public HeuristicDelegate NodeHeuristic {get; set;}
-		public TerminationDelegate NodeTermination {get; set;}
-		public NodeActionDelegate FlushNodeCache {get; set;}
-		public NodeActionDelegate FullFlushNodeCache {get; set;}
+		public HeuristicDelegate<IVisNode> NodeHeuristic {get; set;}
+		public TerminationDelegate<IVisNode> NodeTermination {get; set;}
+		public NodeActionDelegate<IVisNode> FlushNodeCache {get; set;}
+		public NodeActionDelegate<IVisNode> FullFlushNodeCache {get; set;}
 		public int BestHeu {get; set;}
 		public virtual void Add(IVisNode n) {
 			this.Agenda.Add(n);
@@ -89,7 +89,7 @@ namespace sceneparse
 	}
 	
 	public class SearchAstar : BaseSearchAlgorithm {
-		public SearchAstar(NodeActionDelegate nadel, HeuristicDelegate heudel, TerminationDelegate termdel, NodeActionDelegate flushncache, NodeActionDelegate fullflushncache) {
+		public SearchAstar(NodeActionDelegate<IVisNode> nadel, HeuristicDelegate<IVisNode> heudel, TerminationDelegate<IVisNode> termdel, NodeActionDelegate<IVisNode> flushncache, NodeActionDelegate<IVisNode> fullflushncache) {
 			Agenda = new C5.IntervalHeap<IVisNode>(new VisNodeComparer());
 			Visited = new Dictionary<int[,], IVisNode>(new MatrixEqualityComparerInt());
 			NodeAction = nadel;
@@ -101,16 +101,16 @@ namespace sceneparse
 			BestHeu = int.MaxValue;
 		}
 		
-		public SearchAstar(NodeActionDelegate nadel, HeuristicDelegate heudel, TerminationDelegate termdel, NodeActionDelegate flushncache)
+		public SearchAstar(NodeActionDelegate<IVisNode> nadel, HeuristicDelegate<IVisNode> heudel, TerminationDelegate<IVisNode> termdel, NodeActionDelegate<IVisNode> flushncache)
 			: this(nadel, heudel, termdel, flushncache, flushncache) {}
 		
-		public SearchAstar(NodeActionDelegate nadel, HeuristicDelegate heudel, TerminationDelegate termdel)
+		public SearchAstar(NodeActionDelegate<IVisNode> nadel, HeuristicDelegate<IVisNode> heudel, TerminationDelegate<IVisNode> termdel)
 			: this(nadel, heudel, termdel, (IVisNode v) => {}) {}
 		
-		public SearchAstar(NodeActionDelegate nadel, HeuristicDelegate heudel)
+		public SearchAstar(NodeActionDelegate<IVisNode> nadel, HeuristicDelegate<IVisNode> heudel)
 			: this(nadel, heudel, (IVisNode v) => {return false;}) {}
 		
-		public SearchAstar(NodeActionDelegate nadel)
+		public SearchAstar(NodeActionDelegate<IVisNode> nadel)
 			: this(nadel, (IVisNode v) => {return 0;}) {}
 		
 		public override void AddNew(IVisNode n) {

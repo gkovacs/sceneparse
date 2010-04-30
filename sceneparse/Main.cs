@@ -407,7 +407,7 @@ namespace sceneparse
 				int[,] supstruct = new int[refimg.Width(),refimg.Height()];
 				int[,] rendertarg = new int[refimg.Width(),refimg.Height()];
 				int subimgn = 0;
-				var search = new SearchAstar((IVisNode cn) => {
+				var search = new SearchAstar<IVisNode>((IVisNode cn) => {
 					Console.WriteLine(cn.Describe());
 					Console.WriteLine();
 					if (rendertarg != null) {
@@ -478,7 +478,7 @@ namespace sceneparse
 				if (refimg != null) {
 					rendertarg = new int[refimg.Width(),refimg.Height()];
 				}
-				var search = new SearchAstar((IVisNode cn) => {
+				var search = new SearchAstar<IVisNode>((IVisNode cn) => {
 					Console.WriteLine(cn.Describe());
 					Console.WriteLine();
 					if (rendertarg != null) {

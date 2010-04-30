@@ -73,18 +73,31 @@ namespace sceneparse
 		int GetHashCode();
 	}
 	
+	public interface IHeuristic {
+		int Heuv {get; set;}
+	}
+	
+	public interface ICost {
+		int Cost {get; set;}
+		int MaxCost {get; set;}
+	}
+	
+	public interface INextable<T> {
+		IEnumerable<T> Next();
+	}
+	
 	public interface IVisNode : 
 		IComparable<IVisNode>,
 		IEquatable<IVisNode>,
 		IHashable,
+		IHeuristic,
+		ICost,
+		INextable<IVisNode>,
 		IDeepCopyable<IVisNode> {
 		int Width {get;}
 		int Height {get;}
 		string Name {get; set;}
-		int Cost {get; set;}
-		int Heuv {get; set;}
 		double HeuvCost {get;}
-		int MaxCost {get; set;}
 		int[,] Data {get; set;}
 		VisTrans[] Transforms {get; set;}
 		VisTransMulti[] TransformsMulti {get; set;}
@@ -95,7 +108,6 @@ namespace sceneparse
 		//int[,] Render();
 		//void Initialize();
 		string Describe();
-		IEnumerable<IVisNode> Next();
 		int StartX {get; set;}
 		int StartY {get; set;}
 		int[] CachedXCoords {get; set;}

@@ -88,10 +88,15 @@ namespace sceneparse
 		}
 	}
 	
-	public class SearchAstar : BaseSearchAlgorithm<IVisNode> {
-		public SearchAstar(NodeActionDelegate<IVisNode> nadel, HeuristicDelegate<IVisNode> heudel, TerminationDelegate<IVisNode> termdel, NodeActionDelegate<IVisNode> flushncache, NodeActionDelegate<IVisNode> fullflushncache) {
-			Agenda = new C5.IntervalHeap<IVisNode>(new VisNodeComparer());
-			Visited = new HashSet<IVisNode>();
+	public class SearchAstar<T> : BaseSearchAlgorithm<T>
+		where T :
+		class,
+		IHeuristic,
+		ICost,
+		INextable<T> {
+		public SearchAstar(NodeActionDelegate<T> nadel, HeuristicDelegate<T> heudel, TerminationDelegate<T> termdel, NodeActionDelegate<T> flushncache, NodeActionDelegate<T> fullflushncache) {
+			Agenda = new C5.IntervalHeap<T>();
+			Visited = new HashSet<T>();
 			NodeAction = nadel;
 			NodeHeuristic = heudel;
 			NodeTermination = termdel;
@@ -101,34 +106,27 @@ namespace sceneparse
 			BestHeu = int.MaxValue;
 		}
 		
-		public SearchAstar(NodeActionDelegate<IVisNode> nadel, HeuristicDelegate<IVisNode> heudel, TerminationDelegate<IVisNode> termdel, NodeActionDelegate<IVisNode> flushncache)
+		public SearchAstar(NodeActionDelegate<T> nadel, HeuristicDelegate<T> heudel, TerminationDelegate<T> termdel, NodeActionDelegate<T> flushncache)
 			: this(nadel, heudel, termdel, flushncache, flushncache) {}
 		
-		public SearchAstar(NodeActionDelegate<IVisNode> nadel, HeuristicDelegate<IVisNode> heudel, TerminationDelegate<IVisNode> termdel)
-			: this(nadel, heudel, termdel, (IVisNode v) => {}) {}
+		public SearchAstar(NodeActionDelegate<T> nadel, HeuristicDelegate<T> heudel, TerminationDelegate<T> termdel)
+			: this(nadel, heudel, termdel, (v) => {}) {}
 		
-		public SearchAstar(NodeActionDelegate<IVisNode> nadel, HeuristicDelegate<IVisNode> heudel)
-			: this(nadel, heudel, (IVisNode v) => {return false;}) {}
+		public SearchAstar(NodeActionDelegate<T> nadel, HeuristicDelegate<T> heudel)
+			: this(nadel, heudel, (v) => {return false;}) {}
 		
-		public SearchAstar(NodeActionDelegate<IVisNode> nadel)
-			: this(nadel, (IVisNode v) => {return 0;}) {}
+		public SearchAstar(NodeActionDelegate<T> nadel)
+			: this(nadel, (v) => {return 0;}) {}
 		
-		public override void AddNew(IVisNode n) {
+		public override void AddNew(T n) {
 			FullFlushNodeCache(n);
 			n.Heuv = NodeHeuristic(n);
-			//if (n.Heuv < BestHeu) {
-			//	BestHeu = n.Heuv;
-			//}
 			this.Agenda.Add(n);
 			this.Visited.Add(n);
 		}
 		
-		public override void Add(IVisNode n) {
+		public override void Add(T n) {
 			n.Heuv = NodeHeuristic(n);
-			//if (n.Heuv < BestHeu) {
-			//	FlushNodeCache(n);
-			//	BestHeu = n.Heuv;
-			//}
 			this.Agenda.Add(n);
 			this.Visited.Add(n);
 		}
@@ -136,7 +134,7 @@ namespace sceneparse
 			if (Lifetime != int.MaxValue) {
 				if (--Lifetime <= 0) return false;
 			}
-			IVisNode cn = null;
+			T cn = null;
 			while (cn == null || cn.Cost > cn.MaxCost) {
 				if (Agenda.IsEmpty) return false;
 				cn = Agenda.DeleteMin();

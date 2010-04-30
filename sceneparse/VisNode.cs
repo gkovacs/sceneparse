@@ -181,7 +181,7 @@ namespace sceneparse
 		}
 		
 		public bool Equals(IVisNode o) {
-			return this.Data.MatrixEquals(o.Data);
+			return (this.Name.Equals(o.Name) && this.Data.MatrixEquals(o.Data));
 		}
 		
 		public int CompareTo(IVisNode o) {

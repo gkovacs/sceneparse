@@ -262,6 +262,18 @@ namespace sceneparse
 		}
 	}
 	
+	public class AggregateN :
+		BaseVisNode,
+		ITowerVisNode,
+		IRingVisNode {
+		// ITowerVisNode
+		public int GrowDirection {get; set;}
+		// IRingVisNode
+		public int numitems {get; set;}
+		public int radius {get; set;}
+		public double rotation {get; set;}
+	}
+	
 	public class SquareN : BaseVisNode {
 		public static IVisNode Expand(IVisNode ths) {
 			var n = ths.DeepCopyNoData();

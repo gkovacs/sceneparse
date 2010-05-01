@@ -44,6 +44,14 @@ namespace sceneparse
 			return a.GetLength(1)-1;
 		}
 		
+		public static bool MapConstraints(this IEnumerable<VisValid> cl, IVisNode n) {
+			foreach (var f in cl) {
+				if (!f(n))
+					return false;
+			}
+			return true;
+		}
+		
 		public static void ShiftLeft<T>(this T[] a, T v) {
 			ShiftLeft(a, v, a.Length-1);
 		}

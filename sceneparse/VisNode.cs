@@ -63,6 +63,7 @@ namespace sceneparse
 	public delegate IVisNode VisTrans(IVisNode n);
 	public delegate IEnumerable<IVisNode> VisTransMulti(IVisNode n);
 	//public delegate int VisTransCost();
+	public delegate bool VisValid(IVisNode n);
 
 	public interface IDeepCopyable<T> {
 		T DeepCopy();
@@ -101,6 +102,7 @@ namespace sceneparse
 		int[,] Data {get; set;}
 		VisTrans[] Transforms {get; set;}
 		VisTransMulti[] TransformsMulti {get; set;}
+		VisValid[] Constraints {get; set;}
 		//VisTransCost[] TCosts {get; set;}
 		int[] TCostCons {get; set;}
 		bool IsGrid {get; set;}
@@ -125,9 +127,11 @@ namespace sceneparse
 		public int Heuv {
 			get {
 				return _Heuv;
-			} set {
+			}
+			set {
 				_Heuv = value;
-			}}
+			}
+		}
 		public double HeuvCost {get {return Cost/10000.0 + Heuv;} }
 		public int MaxCost {get; set;}
 		public int[,] Data {get; set;}
@@ -138,9 +142,20 @@ namespace sceneparse
 		public VisTransMulti[] TransformsMulti {
 			get {
 				return _TransformsMulti;
-			} set {
+			}
+			set {
 				_TransformsMulti = value;
-			}}
+			}
+		}
+		protected VisValid[] _Constraints = new VisValid[0];
+		public VisValid[] Constraints {
+			get {
+				return _Constraints;
+			}
+			set {
+				_Constraints = value;
+			}
+		}
 		//public VisTransCost[] TCosts {get; set;}
 		public int[] TCostCons {get; set;}
 		protected bool _IsGrid = false;
@@ -183,13 +198,14 @@ namespace sceneparse
 			var rv = new LinkedList<IVisNode>();
 			foreach (var f in Transforms) {
 				var n = f(this);
-				if (n != null)
+				if (n != null && Constraints.MapConstraints(n))
 					rv.AddLast(n);
 			}
 			foreach (var f in TransformsMulti) {
 				var l = f(this);
 				foreach (var n in l) {
-					rv.AddLast(n);
+					if (n != null && Constraints.MapConstraints(n))
+						rv.AddLast(n);
 				}
 			}
 			return rv;
